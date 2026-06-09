@@ -1,0 +1,89 @@
+.cal {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+}
+
+/* When open, lift above sibling rows so the menu never gets covered. */
+.cal[open] {
+  z-index: 40;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  list-style: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-3) var(--space-5);
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.trigger::-webkit-details-marker {
+  display: none;
+}
+
+.trigger:hover {
+  background: var(--color-bg-grey);
+  color: var(--color-accent);
+}
+
+/* Compact = icon-only button, sized to match the row's other action icons. */
+.compact .trigger {
+  padding: 0;
+  border: 1px solid transparent;
+  box-shadow: none;
+  background: transparent;
+  color: var(--color-muted);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  justify-content: center;
+}
+
+.compact .trigger:hover {
+  background: var(--color-bg-grey);
+  color: var(--color-ink);
+}
+
+.trigger:active {
+  transform: translateY(1px);
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  padding: var(--space-2);
+  z-index: 30;
+}
+
+.item {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  text-decoration: none;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.item:hover {
+  background: var(--color-bg-grey);
+  color: var(--color-accent);
+}

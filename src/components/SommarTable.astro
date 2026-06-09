@@ -1,0 +1,336 @@
+---
+import Avatar from './Avatar.astro';
+import AddToCalendar from './AddToCalendar.astro';
+import { formatDate, isoDate, monthName, formatFollowers } from '../lib/sommarpratare';
+import { categorize, type Category } from '../lib/category';
+import {
+  instagramLink,
+  xLink,
+  trendsLink,
+  wikipediaLink,
+  expressenLink,
+  aftonbladetLink,
+} from '../lib/links';
+import type { Host } from '../lib/sommarpratare';
+import styles from './SommarTable.module.css';
+
+interface Props {
+  hosts: Host[];
+}
+const { hosts } = Astro.props;
+
+const monthsPresent = [...new Set(hosts.map((h) => h.data.date.getUTCMonth() + 1))].sort((a, b) => a - b);
+
+// Static inline icons (kept as strings so the action row renders in one loop).
+const IG_SVG =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>';
+const X_SVG =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+const TRENDS_SVG =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>';
+
+// Precompute a view-model per host (no template literals in the template body —
+// the Astro compiler can't parse `${...}` inside element expressions).
+const rows = hosts.map((h) => {
+  const name = h.data.name;
+  const description = h.data.description ?? '';
+  const date = h.data.date;
+  const iso = isoDate(date);
+  const monthFull = monthName(date.getUTCMonth() + 1).toLowerCase();
+  const dateLabel = formatDate(date);
+  const cat = categorize(description);
+  const followers = h.data.instagramFollowers ?? null;
+
+  // Searchable haystack: name + role + category + several date spellings so the
+  // quick search matches "komiker", "juni", "20 juli", "2026-08-16", "16 aug"…
+  const search = [
+    name,
+    description,
+    cat.label,
+    iso,
+    dateLabel,
+    date.getUTCDate() + ' ' + monthFull,
+    monthFull,
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  const actions: Array<{ href: string; title: string; label: string; svg?: string; text?: string }> = [
+    { href: instagramLink(name, h.data.instagram), title: 'Instagram', label: name + ' på Instagram', svg: IG_SVG },
+    { href: xLink(name, h.data.x), title: 'X (Twitter)', label: name + ' på X', svg: X_SVG },
+    { href: trendsLink(name), title: 'Google Trends', label: name + ' på Google Trends', svg: TRENDS_SVG },
+    { href: wikipediaLink(name, h.data.wikipedia), title: 'Wikipedia', label: name + ' på Wikipedia', text: 'W' },
+    { href: expressenLink(name), title: 'Expressen', label: name + ' på Expressen', text: 'E' },
+    { href: aftonbladetLink(name), title: 'Aftonbladet', label: name + ' på Aftonbladet', text: 'AB' },
+  ];
+
+  return {
+    id: h.id,
+    name,
+    description,
+    date,
+    image: h.data.image,
+    iso,
+    month: iso.slice(5, 7),
+    dateLabel,
+    cat,
+    followers,
+    followersLabel: formatFollowers(followers),
+    search,
+    actions,
+  };
+});
+
+// Distinct categories present, for the filter dropdown.
+const categories: Category[] = [];
+for (const r of rows) if (!categories.some((c) => c.key === r.cat.key)) categories.push(r.cat);
+categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
+---
+
+<section class={styles.wrap} data-table>
+  <div class={styles.toolbar}>
+    <div class={styles.searchCol}>
+      <div class={styles.searchField}>
+        <svg
+          class={styles.searchIcon}
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M21 21l-4.3-4.3"></path>
+        </svg>
+        <input
+          type="search"
+          class={styles.search}
+          data-search
+          placeholder="Sök namn, kategori eller datum…"
+          aria-label="Sök sommarpratare"
+          autocomplete="off"
+        />
+      </div>
+      <p class={styles.count} data-count aria-live="polite"></p>
+    </div>
+
+    <div class={styles.filters}>
+      <div class={styles.filterField}>
+        <label class="visually-hidden" for="month-filter">Filtrera på månad</label>
+        <select id="month-filter" class={styles.select} data-month>
+          <option value="">Alla månader</option>
+          {monthsPresent.map((m) => (
+            <option value={String(m).padStart(2, '0')}>{monthName(m)}</option>
+          ))}
+        </select>
+      </div>
+
+      <div class={styles.filterField}>
+        <label class="visually-hidden" for="category-filter">Filtrera på kategori</label>
+        <select id="category-filter" class={styles.select} data-category>
+          <option value="">Alla kategorier</option>
+          {categories.map((c) => (
+            <option value={c.key}>{c.emoji + ' ' + c.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div class={styles.sortField}>
+        <label class="visually-hidden" for="sort-select">Sortera</label>
+        <select id="sort-select" class={styles.select} data-sort-select>
+          <option value="date-asc">Datum (tidigast)</option>
+          <option value="date-desc">Datum (senast)</option>
+          <option value="name-asc">Namn (A–Ö)</option>
+          <option value="name-desc">Namn (Ö–A)</option>
+          <option value="followers-desc">Följare (flest)</option>
+          <option value="followers-asc">Följare (minst)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class={styles.tableScroll}>
+    <table class={styles.table}>
+      <thead>
+        <tr>
+          <th class={styles.thAvatar}><span class="visually-hidden">Bild</span></th>
+          <th class={styles.thDate} aria-sort="ascending">
+            <button type="button" class={styles.sortBtn} data-sort="date">
+              Datum <span class={styles.arrow} data-arrow>▲</span>
+            </button>
+          </th>
+          <th class={styles.thName}>
+            <button type="button" class={styles.sortBtn} data-sort="name">
+              Namn <span class={styles.arrow} data-arrow></span>
+            </button>
+          </th>
+          <th class={styles.thDesc}>Beskrivning</th>
+          <th class={styles.thFollowers}>
+            <button type="button" class={styles.sortBtn} data-sort="followers">
+              Följare <span class={styles.arrow} data-arrow></span>
+            </button>
+          </th>
+          <th class={styles.thLinks}>Länkar</th>
+        </tr>
+      </thead>
+      <tbody data-rows>
+        {rows.map((r) => (
+          <tr
+            class={styles.row}
+            data-row
+            data-name={r.name.toLowerCase()}
+            data-date={r.iso}
+            data-month={r.month}
+            data-category={r.cat.key}
+            data-followers={r.followers ?? ''}
+            data-search={r.search}
+          >
+            <td class={styles.cellAvatar}>
+              <Avatar name={r.name} image={r.image} size={44} preview />
+            </td>
+            <td class={styles.cellDate}>
+              <time datetime={r.iso}>{r.dateLabel}</time>
+            </td>
+            <td class={styles.cellName}>{r.name}</td>
+            <td class={styles.cellDesc}>
+              <span class={styles.catIcon} title={r.cat.label} aria-label={r.cat.label}>{r.cat.emoji}</span>{r.description}
+            </td>
+            <td class={styles.cellFollowers}>
+              {r.followers != null ? (
+                <Fragment>
+                  <span class={styles.follIcon} aria-hidden="true">👥</span>{r.followersLabel}
+                </Fragment>
+              ) : (
+                <span class={styles.follNone}>—</span>
+              )}
+            </td>
+            <td class={styles.cellLinks}>
+              <div class={styles.links}>
+                {r.actions.map((a) => (
+                  <a
+                    class={styles.iconBtn}
+                    href={a.href}
+                    target="_blank"
+                    rel="noopener"
+                    title={a.title}
+                    aria-label={a.label}
+                  >
+                    {a.svg ? <Fragment set:html={a.svg} /> : <span class={styles.mono}>{a.text}</span>}
+                  </a>
+                ))}
+                <AddToCalendar name={r.name} date={r.date} description={r.description} uid={r.id} variant="compact" />
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <p class={styles.noResults} data-no-results hidden>Inga sommarpratare matchar din sökning.</p>
+  </div>
+</section>
+
+<script>
+  function initTable() {
+    const root = document.querySelector<HTMLElement>('[data-table]');
+    if (!root) return;
+    const search = root.querySelector<HTMLInputElement>('[data-search]');
+    const monthSel = root.querySelector<HTMLSelectElement>('[data-month]');
+    const categorySel = root.querySelector<HTMLSelectElement>('[data-category]');
+    const tbody = root.querySelector<HTMLElement>('[data-rows]');
+    const rows = Array.from(root.querySelectorAll<HTMLElement>('[data-row]'));
+    const count = root.querySelector<HTMLElement>('[data-count]');
+    const noResults = root.querySelector<HTMLElement>('[data-no-results]');
+    const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-sort]'));
+    const sortSelect = root.querySelector<HTMLSelectElement>('[data-sort-select]');
+    if (!tbody) return;
+
+    let sortKey: 'date' | 'name' | 'followers' = 'date';
+    let sortDir = 1; // 1 = ascending, -1 = descending
+
+    function cmp(a: HTMLElement, b: HTMLElement) {
+      if (sortKey === 'followers') {
+        const av = a.dataset.followers ?? '';
+        const bv = b.dataset.followers ?? '';
+        const an = av === '' ? null : Number(av);
+        const bn = bv === '' ? null : Number(bv);
+        // Unknown counts always sort last, regardless of direction.
+        if (an == null && bn == null) return 0;
+        if (an == null) return 1;
+        if (bn == null) return -1;
+        return (an - bn) * sortDir;
+      }
+      const av = a.dataset[sortKey] ?? '';
+      const bv = b.dataset[sortKey] ?? '';
+      const r = sortKey === 'name' ? av.localeCompare(bv, 'sv') : av < bv ? -1 : av > bv ? 1 : 0;
+      return r * sortDir;
+    }
+
+    function syncSortUI() {
+      for (const btn of sortBtns) {
+        const th = btn.closest('th');
+        const arrow = btn.querySelector<HTMLElement>('[data-arrow]');
+        const active = btn.dataset.sort === sortKey;
+        if (th) {
+          if (active) th.setAttribute('aria-sort', sortDir === 1 ? 'ascending' : 'descending');
+          else th.removeAttribute('aria-sort');
+        }
+        if (arrow) arrow.textContent = active ? (sortDir === 1 ? '▲' : '▼') : '';
+        btn.classList.toggle('is-active', active);
+      }
+      if (sortSelect) sortSelect.value = sortKey + '-' + (sortDir === 1 ? 'asc' : 'desc');
+    }
+
+    function render() {
+      const q = (search?.value ?? '').trim().toLowerCase();
+      const m = monthSel?.value ?? '';
+      const c = categorySel?.value ?? '';
+      let shown = 0;
+      for (const row of [...rows].sort(cmp)) {
+        const visible =
+          (!q || (row.dataset.search ?? '').includes(q)) &&
+          (!m || row.dataset.month === m) &&
+          (!c || row.dataset.category === c);
+        row.hidden = !visible;
+        if (visible) shown++;
+        tbody!.appendChild(row); // re-append in sorted order
+      }
+      if (count) {
+        count.textContent = shown === rows.length ? rows.length + ' sommarpratare' : shown + ' av ' + rows.length;
+      }
+      if (noResults) noResults.hidden = shown !== 0;
+      syncSortUI();
+    }
+
+    search?.addEventListener('input', render);
+    monthSel?.addEventListener('change', render);
+    categorySel?.addEventListener('change', render);
+    sortSelect?.addEventListener('change', () => {
+      const [key, dir] = sortSelect.value.split('-');
+      sortKey = key as 'date' | 'name' | 'followers';
+      sortDir = dir === 'desc' ? -1 : 1;
+      render();
+    });
+    for (const btn of sortBtns) {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.sort as 'date' | 'name' | 'followers';
+        if (sortKey === key) sortDir *= -1;
+        else {
+          sortKey = key;
+          // followers feels most useful highest-first by default.
+          sortDir = key === 'followers' ? -1 : 1;
+        }
+        render();
+      });
+    }
+
+    render();
+  }
+
+  if (document.readyState !== 'loading') initTable();
+  else document.addEventListener('DOMContentLoaded', initTable);
+</script>

@@ -1,0 +1,27 @@
+.hero {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-8);
+  max-width: 720px;
+}
+
+.kicker {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.lede {
+  margin: var(--space-3) 0 0;
+  font-size: 1.1rem;
+  color: var(--color-ink-soft);
+}

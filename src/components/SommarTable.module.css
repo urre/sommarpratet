@@ -1,0 +1,379 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ---- toolbar: search (+ count beneath) on the left, filters on the right --- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3) var(--space-4);
+}
+
+.searchCol {
+  flex: 1 1 360px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.searchField {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-muted);
+  pointer-events: none;
+}
+
+/* Inputs share the same modern rounded-rect treatment as jazzkonserter. */
+.search,
+.select {
+  width: 100%;
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.search {
+  padding: var(--space-3) var(--space-4) var(--space-3) 2.6rem;
+}
+.search::placeholder {
+  color: var(--color-muted);
+}
+
+.select {
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+}
+
+.search:focus,
+.select:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Opt into the modern customizable <select> (Chrome 135+). Browsers without
+   support ignore these and fall back to the native control above. */
+.select,
+.select::picker(select) {
+  appearance: base-select;
+}
+.select {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.select::picker(select) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+  padding: var(--space-1);
+  margin-top: 4px;
+  --anchor-gap: 4px;
+}
+.select option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 8px;
+  font: inherit;
+}
+.select option:hover,
+.select option:focus {
+  background: var(--color-bg-grey);
+}
+.select option:checked {
+  font-weight: 600;
+}
+.select option::checkmark {
+  display: none;
+}
+.select::picker-icon {
+  color: var(--color-muted);
+  transition: transform 0.18s ease;
+}
+.select:open::picker-icon {
+  transform: rotate(180deg);
+}
+
+.count {
+  margin: 0;
+  padding-left: var(--space-1);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.filterField {
+  flex: 0 0 auto;
+}
+/* The sort dropdown only shows on mobile — desktop sorts via column headers. */
+.sortField {
+  flex: 0 0 auto;
+  display: none;
+}
+
+/* ---- table -------------------------------------------------------------- */
+.tableScroll {
+  overflow-x: auto;
+}
+/* On desktop the table fits, so let the avatar hover-previews overflow freely
+   (an auto/scroll container would clip them). */
+@media (hover: hover) and (min-width: 1024px) {
+  .tableScroll {
+    overflow: visible;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 880px;
+}
+
+.table thead th {
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.thAvatar { width: 56px; }
+.thDate { width: 116px; }
+.thName { width: 180px; }
+.thFollowers { width: 104px; text-align: right; }
+.thLinks { width: 1%; white-space: nowrap; }
+
+.sortBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.sortBtn:hover { color: var(--color-ink); }
+.sortBtn.is-active { color: var(--color-ink); }
+
+.arrow {
+  font-size: 0.7em;
+  color: var(--color-ink-soft);
+}
+
+.row {
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.12s ease;
+}
+.row:last-child { border-bottom: 0; }
+.row:hover { background: var(--color-bg-grey); }
+.row[hidden] { display: none; }
+
+.table td {
+  padding: var(--space-4);
+  vertical-align: middle;
+}
+
+.cellAvatar { width: 56px; }
+
+.cellDate {
+  color: var(--color-muted);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.cellName {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.cellDesc {
+  color: var(--color-ink-soft);
+  min-width: 200px;
+}
+
+/* ---- category icon (emoji, prefixes the description) -------------------- */
+.catIcon {
+  margin-right: var(--space-2);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+/* ---- followers ---------------------------------------------------------- */
+.cellFollowers {
+  text-align: right;
+  color: var(--color-ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+.follIcon {
+  display: none; /* desktop: number only */
+}
+.follNone {
+  color: var(--color-muted);
+}
+
+/* ---- action icons ------------------------------------------------------- */
+.cellLinks { white-space: nowrap; }
+
+.links {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: background 0.12s ease, color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.iconBtn:hover {
+  background: var(--color-bg-grey);
+  color: var(--color-ink);
+}
+
+.mono {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.noResults {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--color-muted);
+}
+
+/* ---- responsive: cards on small screens --------------------------------- */
+@media (max-width: 640px) {
+  .searchCol {
+    flex: 1 1 100%;
+  }
+  .filters {
+    flex: 1 1 100%;
+  }
+  .filterField {
+    display: block;
+    flex: 1 1 calc(50% - var(--space-2));
+  }
+  .sortField {
+    display: block;
+    flex: 1 1 100%;
+  }
+
+  /* Drop the scrolling table chrome — each row becomes its own card. */
+  .tableScroll {
+    overflow: visible;
+  }
+  .table {
+    min-width: 0;
+    display: block;
+  }
+  .table thead {
+    display: none;
+  }
+  .table tbody {
+    display: block;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 46px 1fr auto;
+    grid-template-areas:
+      'avatar name name'
+      'avatar date foll'
+      'desc   desc desc'
+      'links  links links';
+    gap: var(--space-1) var(--space-3);
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  .row:hover {
+    background: var(--color-surface);
+  }
+
+  .table td {
+    display: block;
+    padding: 0;
+  }
+  .cellAvatar {
+    grid-area: avatar;
+    align-self: center;
+  }
+  .cellName {
+    grid-area: name;
+    font-size: 1.05rem;
+  }
+  .cellDate {
+    grid-area: date;
+    font-size: 0.85rem;
+  }
+  .cellFollowers {
+    grid-area: foll;
+    justify-self: end;
+    align-self: center;
+  }
+  .cellDesc {
+    grid-area: desc;
+    padding-top: var(--space-2);
+  }
+  .cellLinks {
+    grid-area: links;
+    padding-top: var(--space-3);
+    white-space: normal;
+  }
+  .links {
+    flex-wrap: wrap;
+  }
+
+  /* On cards, prefix the followers count with an icon for context. */
+  .follIcon {
+    display: inline;
+    margin-right: 4px;
+    font-size: 0.85rem;
+  }
+}

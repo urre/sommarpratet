@@ -1,0 +1,8 @@
+---
+name: "David Wiberg"
+date: 2026-08-03
+description: "Skådespelare, författare och komiker"
+instagram: "https://www.instagram.com/david_wiberg/"
+instagramFollowers: 15000
+image: "/avatars/david-wiberg.webp"
+---

@@ -1,0 +1,41 @@
+---
+import { initials, avatarColor, textColor } from '../lib/avatar';
+import styles from './Avatar.module.css';
+
+interface Props {
+  name: string;
+  /** Optional portrait image (path or URL). Falls back to an initials avatar. */
+  image?: string;
+  size?: number;
+  /** Desktop-only: show a larger photo popover to the right on hover. */
+  preview?: boolean;
+}
+
+const { name, image, size = 44, preview = false } = Astro.props;
+const bg = avatarColor(name);
+const fg = textColor(bg);
+---
+
+{image ? (
+  <span class={styles.holder}>
+    <img
+      class={styles.avatar}
+      src={image}
+      alt={name}
+      width={size}
+      height={size}
+      style={`width:${size}px;height:${size}px`}
+      loading="lazy"
+      decoding="async"
+    />
+    {preview && (
+      <img class={styles.preview} src={image} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+    )}
+  </span>
+) : (
+  <span
+    class={styles.avatar}
+    style={`width:${size}px;height:${size}px;background:${bg};color:${fg};font-size:${Math.round(size * 0.36)}px`}
+    aria-hidden="true"
+  >{initials(name)}</span>
+)}

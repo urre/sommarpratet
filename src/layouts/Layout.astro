@@ -1,0 +1,122 @@
+---
+import '../styles/global.css';
+import styles from './Layout.module.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** Page-specific JSON-LD structured data object(s). */
+  jsonLd?: object | object[];
+}
+
+const {
+  title,
+  description = 'Sommarpratet i Sommar i P1 – datum, beskrivningar och länkar i en sökbar, sorterbar lista.',
+  jsonLd,
+} = Astro.props;
+
+const siteName = 'Sommarpratet';
+const fullTitle = title === siteName ? title : `${title} – ${siteName}`;
+const site = Astro.site ?? Astro.url;
+const canonical = new URL(Astro.url.pathname, site);
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteName,
+  url: new URL('/', site).href,
+  inLanguage: 'sv-SE',
+  description,
+};
+const pageSchemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const schemas = [websiteSchema, ...pageSchemas];
+---
+
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* Apply an explicit saved choice before first paint. With no saved choice,
+        no attribute is set and CSS (prefers-color-scheme) follows the OS. */}
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem('theme');
+          if (saved) document.documentElement.dataset.theme = saved;
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/Inter-Bold.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Inter-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+
+    {schemas.map((schema) => (
+      <script type="application/ld+json" is:inline set:html={JSON.stringify(schema)} />
+    ))}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Hoppa till innehåll</a>
+    <main id="main" class={styles.main}>
+      <div class="container">
+        <slot />
+      </div>
+    </main>
+
+    <footer class={styles.footer}>
+      <div class="container">
+        <div class={styles.footerInner}>
+          <p class={styles.footerText}>
+            Källor:
+            <a href="https://www.expressen.se/noje/arets-sommarpratare-2026--hela-listan-/" target="_blank" rel="noopener">Expressen</a>
+            ·
+            <a href="https://sverigesradio.se/sommarprat" target="_blank" rel="noopener">Sveriges Radio</a>
+          </p>
+          <button type="button" class={styles.themeToggle} data-theme-toggle aria-label="Växla mörkt/ljust läge">
+            <span data-theme-label>Tema</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const btn = document.querySelector('[data-theme-toggle]');
+        const label = document.querySelector('[data-theme-label]');
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        // Effective theme = explicit choice if set, otherwise the OS preference.
+        const effective = () => root.dataset.theme || (mq.matches ? 'dark' : 'light');
+        const sync = () => {
+          if (label) label.textContent = effective() === 'dark' ? '☀︎ Ljust' : '☾ Mörkt';
+        };
+        sync();
+        btn?.addEventListener('click', () => {
+          const next = effective() === 'dark' ? 'light' : 'dark';
+          root.dataset.theme = next;
+          try {
+            localStorage.setItem('theme', next);
+          } catch (e) {}
+          sync();
+        });
+        // No explicit choice → keep the label in sync as the OS preference flips.
+        mq.addEventListener('change', () => {
+          try {
+            if (!localStorage.getItem('theme')) sync();
+          } catch (e) {}
+        });
+      })();
+    </script>
+  </body>
+</html>

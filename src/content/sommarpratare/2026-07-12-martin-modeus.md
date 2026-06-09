@@ -5,4 +5,5 @@ description: "Ärkebiskop"
 instagram: "https://www.instagram.com/martinmodeus/"
 instagramFollowers: 8000
 image: "/avatars/martin-modeus.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815510"
 ---

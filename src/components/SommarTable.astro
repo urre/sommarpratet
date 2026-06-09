@@ -8,8 +8,7 @@ import {
   xLink,
   trendsLink,
   wikipediaLink,
-  expressenLink,
-  aftonbladetLink,
+  srLink,
 } from '../lib/links';
 import type { Host } from '../lib/sommarpratare';
 import styles from './SommarTable.module.css';
@@ -28,6 +27,8 @@ const X_SVG =
   '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
 const TRENDS_SVG =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>';
+const SR_SVG =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>';
 
 // Precompute a view-model per host (no template literals in the template body —
 // the Astro compiler can't parse `${...}` inside element expressions).
@@ -56,12 +57,11 @@ const rows = hosts.map((h) => {
     .toLowerCase();
 
   const actions: Array<{ href: string; title: string; label: string; svg?: string; text?: string }> = [
+    { href: srLink(name, h.data.sr), title: 'Sveriges Radio', label: name + ' på Sveriges Radio', svg: SR_SVG },
     { href: instagramLink(name, h.data.instagram), title: 'Instagram', label: name + ' på Instagram', svg: IG_SVG },
     { href: xLink(name, h.data.x), title: 'X (Twitter)', label: name + ' på X', svg: X_SVG },
     { href: trendsLink(name), title: 'Google Trends', label: name + ' på Google Trends', svg: TRENDS_SVG },
     { href: wikipediaLink(name, h.data.wikipedia), title: 'Wikipedia', label: name + ' på Wikipedia', text: 'W' },
-    { href: expressenLink(name), title: 'Expressen', label: name + ' på Expressen', text: 'E' },
-    { href: aftonbladetLink(name), title: 'Aftonbladet', label: name + ' på Aftonbladet', text: 'AB' },
   ];
 
   return {
@@ -134,7 +134,7 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
         <select id="category-filter" class={styles.select} data-category>
           <option value="">Alla kategorier</option>
           {categories.map((c) => (
-            <option value={c.key}>{c.emoji + ' ' + c.label}</option>
+            <option value={c.key}>{c.label}</option>
           ))}
         </select>
       </div>
@@ -171,7 +171,7 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
           <th class={styles.thDesc}>Beskrivning</th>
           <th class={styles.thFollowers}>
             <button type="button" class={styles.sortBtn} data-sort="followers">
-              Följare <span class={styles.arrow} data-arrow></span>
+              Följare på Instagram <span class={styles.arrow} data-arrow></span>
             </button>
           </th>
           <th class={styles.thLinks}>Länkar</th>
@@ -194,19 +194,12 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
             </td>
             <td class={styles.cellDate}>
               <time datetime={r.iso}>{r.dateLabel}</time>
+              <span class={styles.todayPill} data-today-pill hidden>Idag</span>
             </td>
             <td class={styles.cellName}>{r.name}</td>
-            <td class={styles.cellDesc}>
-              <span class={styles.catIcon} title={r.cat.label} aria-label={r.cat.label}>{r.cat.emoji}</span>{r.description}
-            </td>
+            <td class={styles.cellDesc}>{r.description}</td>
             <td class={styles.cellFollowers}>
-              {r.followers != null ? (
-                <Fragment>
-                  <span class={styles.follIcon} aria-hidden="true">👥</span>{r.followersLabel}
-                </Fragment>
-              ) : (
-                <span class={styles.follNone}>—</span>
-              )}
+              {r.followers != null ? r.followersLabel : <span class={styles.follNone}>—</span>}
             </td>
             <td class={styles.cellLinks}>
               <div class={styles.links}>
@@ -216,7 +209,7 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
                     href={a.href}
                     target="_blank"
                     rel="noopener"
-                    title={a.title}
+                    data-tip={a.title}
                     aria-label={a.label}
                   >
                     {a.svg ? <Fragment set:html={a.svg} /> : <span class={styles.mono}>{a.text}</span>}
@@ -248,6 +241,18 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
     const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-sort]'));
     const sortSelect = root.querySelector<HTMLSelectElement>('[data-sort-select]');
     if (!tbody) return;
+
+    // Reveal an "Idag" pill on the row whose broadcast date is today. Computed
+    // client-side so it stays correct on a static build.
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const todayIso = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+    for (const row of rows) {
+      if (row.dataset.date === todayIso) {
+        const pill = row.querySelector<HTMLElement>('[data-today-pill]');
+        if (pill) pill.hidden = false;
+      }
+    }
 
     let sortKey: 'date' | 'name' | 'followers' = 'date';
     let sortDir = 1; // 1 = ascending, -1 = descending

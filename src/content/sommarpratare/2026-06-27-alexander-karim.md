@@ -5,4 +5,5 @@ description: "Skådespelare"
 instagram: "https://www.instagram.com/alexanderkarim/"
 instagramFollowers: 47000
 image: "/avatars/alexander-karim.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815519"
 ---

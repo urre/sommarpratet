@@ -5,4 +5,5 @@ description: "Författare"
 instagram: "https://www.instagram.com/mariamaunsbach/"
 instagramFollowers: 8000
 image: "/avatars/maria-maunsbach.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815526"
 ---

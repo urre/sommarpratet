@@ -5,4 +5,5 @@ description: "Utrikeskorrespondent"
 instagram: "https://www.instagram.com/ginnalindberg/"
 instagramFollowers: 12000
 image: "/avatars/ginna-lindberg.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815470"
 ---

@@ -5,4 +5,5 @@ description: "Barnboksförfattare och illustratör"
 instagram: "https://www.instagram.com/sarahsheppard_jobbar/"
 instagramFollowers: 3300
 image: "/avatars/sarah-sheppard.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815473"
 ---

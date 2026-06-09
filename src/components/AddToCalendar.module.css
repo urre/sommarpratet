@@ -87,3 +87,38 @@
   background: var(--color-bg-grey);
   color: var(--color-accent);
 }
+
+/* Small custom tooltip on the icon trigger (desktop only) — matches the
+   action-link tooltips in SommarTable. Hidden while the menu is open. */
+@media (hover: hover) and (min-width: 1024px) {
+  .compact .trigger[data-tip] {
+    position: relative;
+  }
+  .compact .trigger[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(3px);
+    background: var(--color-ink);
+    color: var(--color-surface);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    padding: 5px 8px;
+    border-radius: 6px;
+    box-shadow: var(--shadow-sm);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 60;
+  }
+  .compact .trigger[data-tip]:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .cal[open] .trigger[data-tip]::after {
+    opacity: 0;
+  }
+}

@@ -5,4 +5,5 @@ description: "Skådespelare"
 instagram: "https://www.instagram.com/joelkinnaman/"
 instagramFollowers: 1400000
 image: "/avatars/joel-kinnaman.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815527"
 ---

@@ -5,4 +5,5 @@ description: "Komiker"
 instagram: "https://www.instagram.com/evelynmok/"
 instagramFollowers: 23000
 image: "/avatars/evelyn-mok.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815484"
 ---

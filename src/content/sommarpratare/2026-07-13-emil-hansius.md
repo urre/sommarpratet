@@ -5,4 +5,5 @@ description: "Youtuber"
 instagram: "https://www.instagram.com/hansius/"
 instagramFollowers: 246000
 image: "/avatars/emil-hansius.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815511"
 ---

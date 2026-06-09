@@ -5,4 +5,5 @@ description: "Basketspelare, Miami Heat i NBA"
 instagram: "https://www.instagram.com/pellelarsson_/"
 instagramFollowers: 104000
 image: "/avatars/pelle-larsson.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815541"
 ---

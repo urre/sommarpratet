@@ -5,4 +5,5 @@ description: "Mask- och sminkartister"
 instagram: "https://www.instagram.com/themakeupdesigners/"
 instagramFollowers: 16000
 image: "/avatars/eva-von-bahr-och-love-larsson.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815542"
 ---

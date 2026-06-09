@@ -19,6 +19,13 @@
   letter-spacing: -0.02em;
   color: var(--color-ink);
 }
+.titleLink {
+  color: inherit;
+  text-decoration: none;
+}
+.titleLink:hover {
+  text-decoration: none;
+}
 
 .lede {
   margin: var(--space-3) 0 0;

@@ -5,4 +5,5 @@ description: "Författare"
 instagram: "https://www.instagram.com/amandaromare/"
 instagramFollowers: 23000
 image: "/avatars/amanda-romare.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815465"
 ---

@@ -164,7 +164,7 @@
 .thAvatar { width: 56px; }
 .thDate { width: 116px; }
 .thName { width: 180px; }
-.thFollowers { width: 104px; text-align: right; }
+.thFollowers { width: 168px; text-align: right; }
 .thLinks { width: 1%; white-space: nowrap; }
 
 .sortBtn {
@@ -210,6 +210,26 @@
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
+.cellDate time {
+  display: block;
+}
+
+.todayPill {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.todayPill[hidden] {
+  display: none;
+}
 
 .cellName {
   font-weight: 700;
@@ -221,13 +241,6 @@
   min-width: 200px;
 }
 
-/* ---- category icon (emoji, prefixes the description) -------------------- */
-.catIcon {
-  margin-right: var(--space-2);
-  font-size: 1.05rem;
-  line-height: 1;
-}
-
 /* ---- followers ---------------------------------------------------------- */
 .cellFollowers {
   text-align: right;
@@ -235,9 +248,6 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   font-size: 0.9rem;
-}
-.follIcon {
-  display: none; /* desktop: number only */
 }
 .follNone {
   color: var(--color-muted);
@@ -275,6 +285,37 @@
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+
+/* Small custom tooltips on hover (desktop only). */
+@media (hover: hover) and (min-width: 1024px) {
+  .iconBtn {
+    position: relative;
+  }
+  .iconBtn[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(3px);
+    background: var(--color-ink);
+    color: var(--color-surface);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    padding: 5px 8px;
+    border-radius: 6px;
+    box-shadow: var(--shadow-sm);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 60;
+  }
+  .iconBtn[data-tip]:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .noResults {
@@ -368,12 +409,5 @@
   }
   .links {
     flex-wrap: wrap;
-  }
-
-  /* On cards, prefix the followers count with an icon for context. */
-  .follIcon {
-    display: inline;
-    margin-right: 4px;
-    font-size: 0.85rem;
   }
 }

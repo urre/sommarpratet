@@ -5,4 +5,5 @@ description: "Författare"
 instagram: "https://www.instagram.com/ruthkjwriter/"
 instagramFollowers: 3700
 image: "/avatars/ruth-kvarnstrom-jones.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815520"
 ---

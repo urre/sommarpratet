@@ -5,4 +5,5 @@ description: "Författare och teologie doktor i etik"
 instagram: "https://www.instagram.com/ann.heberlein.1/"
 instagramFollowers: 9500
 image: "/avatars/ann-heberlein.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815475"
 ---

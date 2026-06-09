@@ -5,4 +5,5 @@ description: "Skådespelare, författare och komiker"
 instagram: "https://www.instagram.com/david_wiberg/"
 instagramFollowers: 15000
 image: "/avatars/david-wiberg.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815538"
 ---

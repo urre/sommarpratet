@@ -5,4 +5,5 @@ description: "Operasångerska"
 instagram: "https://www.instagram.com/elinrombo/"
 instagramFollowers: 4000
 image: "/avatars/elin-rombo.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815535"
 ---

@@ -5,4 +5,5 @@ description: "Journalist och kungaexpert"
 instagram: "https://www.instagram.com/ebbavonsydow/"
 instagramFollowers: 153000
 image: "/avatars/ebba-kleberg-von-sydow.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815515"
 ---

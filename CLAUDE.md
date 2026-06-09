@@ -89,7 +89,7 @@ Most external links are **search deep-links** built from the name in
 - **X** → `x.com/search?q=<name>`
 - **Google Trends** → `trends.google.com` scoped to Sweden (`geo=SE`)
 - **Wikipedia** → Swedish Wikipedia "go" endpoint (jumps to the article on an exact title match, else search results)
-- **Expressen / Aftonbladet** → each paper's on-site search
+- **Sveriges Radio** → the host's Sommar i P1 episode page (explicit per host in `sr`); falls back to an SR site search
 
 To pin an exact profile/article, set `instagram` / `x` / `wikipedia` in the
 host's frontmatter — the explicit URL overrides the generated search link.
@@ -153,9 +153,8 @@ npx astro check    # type-check
   (credit: Sveriges Radio / Expressen) — fine for a fan/reference page, but
   verify rights before any commercial use.
 - **Categories**: derived at render from the description by a keyword matcher
-  (`lib/category.ts`) — each maps to an emoji icon shown before the description
-  and powers the category filter. Not stored in frontmatter (edit a description
-  → it re-categorises).
+  (`lib/category.ts`) and used for the category filter. Not stored in frontmatter
+  (edit a description → it re-categorises).
 - **Theme**: follows the OS via `@media (prefers-color-scheme)` by default; the
   footer toggle sets an explicit `data-theme` on `<html>` (saved to
   localStorage) that overrides it. `[data-theme='light']` opts back out of the

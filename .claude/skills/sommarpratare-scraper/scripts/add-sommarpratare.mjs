@@ -68,6 +68,7 @@ function frontmatter(host) {
     lines.push(`instagramFollowers: ${Number(host.instagramFollowers)}`);
   if (host.x) lines.push(`x: ${yamlStr(host.x)}`);
   if (host.wikipedia) lines.push(`wikipedia: ${yamlStr(host.wikipedia)}`);
+  if (host.sr) lines.push(`sr: ${yamlStr(host.sr)}`);
   if (host.image) lines.push(`image: ${yamlStr(host.image)}`);
   lines.push('---');
   lines.push(''); // frontmatter-only: trailing newline, no body

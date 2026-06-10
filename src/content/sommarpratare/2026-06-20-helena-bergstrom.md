@@ -1,6 +1,7 @@
 ---
 name: "Helena Bergström"
 date: 2026-06-20
+time: "13:00"
 description: "Skådespelare"
 instagram: "https://www.instagram.com/helenabergstromnutley/"
 instagramFollowers: 45000

@@ -1,6 +1,7 @@
 ---
 name: "Maria Maunsbach"
 date: 2026-07-02
+time: "13:00"
 description: "Författare"
 instagram: "https://www.instagram.com/mariamaunsbach/"
 instagramFollowers: 8000

@@ -1,25 +1,39 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SommarTable from '../components/SommarTable.astro';
-import { getHosts, formatDate } from '../lib/sommarpratare';
+import { getHosts, formatDate, isoDate } from '../lib/sommarpratare';
 import styles from './index.module.css';
 
 const hosts = await getHosts();
 const first = hosts[0]?.data.date;
 const last = hosts[hosts.length - 1]?.data.date;
 const year = first?.getUTCFullYear() ?? new Date().getUTCFullYear();
+const site = Astro.site ?? Astro.url;
 
-// ItemList structured data for the full line-up.
+// ItemList structured data for the full line-up. Each Person carries their
+// portrait, verified profiles (sameAs) and the Sommar i P1 episode (subjectOf).
 const itemListSchema = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
-  name: `Sommarpratare ${year}`,
+  name: `Sommarpratare i Sommar i P1 ${year}`,
   numberOfItems: hosts.length,
-  itemListElement: hosts.map((h, i) => ({
-    '@type': 'ListItem',
-    position: i + 1,
-    item: { '@type': 'Person', name: h.data.name, description: h.data.description },
-  })),
+  itemListElement: hosts.map((h, i) => {
+    const sameAs = [h.data.instagram, h.data.x, h.data.wikipedia].filter(Boolean);
+    const person: Record<string, unknown> = { '@type': 'Person', name: h.data.name };
+    if (h.data.description) person.description = h.data.description;
+    if (h.data.image) person.image = new URL(h.data.image, site).href;
+    if (sameAs.length) person.sameAs = sameAs;
+    if (h.data.sr) {
+      person.subjectOf = {
+        '@type': 'RadioEpisode',
+        name: `Sommar i P1: ${h.data.name}`,
+        url: h.data.sr,
+        datePublished: isoDate(h.data.date),
+        partOfSeries: { '@type': 'RadioSeries', name: 'Sommar i P1' },
+      };
+    }
+    return { '@type': 'ListItem', position: i + 1, item: person };
+  }),
 };
 ---
 
@@ -30,7 +44,7 @@ const itemListSchema = {
       Alla {hosts.length} sommarpratare i Sommar i P1 {year}
       {first && last && (
         <> – från {formatDate(first)} till {formatDate(last)}</>
-      )}. Sök, sortera och lägg till sändningarna direkt i din kalender.
+      )}. Spara dina favoriter och lägg till sändningarna direkt i din kalender.
     </p>
   </header>
 

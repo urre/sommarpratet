@@ -1,6 +1,7 @@
 ---
 name: "Andreas T Olsson"
 date: 2026-07-28
+time: "13:00"
 description: "Skådespelare och dramatiker"
 instagram: "https://www.instagram.com/andreastolsson/"
 instagramFollowers: 2500

@@ -1,6 +1,7 @@
 ---
 name: "Vanessa Kamga"
 date: 2026-08-12
+time: "13:00"
 description: "Friidrottare"
 instagram: "https://www.instagram.com/vanessakamga/"
 instagramFollowers: 62000

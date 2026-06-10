@@ -1,6 +1,7 @@
 ---
 name: "Jonas Bonnier"
 date: 2026-06-24
+time: "13:00"
 description: "Författare"
 instagram: "https://www.instagram.com/jonasbonnier/"
 image: "/avatars/jonas-bonnier.webp"

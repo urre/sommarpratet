@@ -4,6 +4,40 @@
   gap: var(--space-5);
 }
 
+/* ---- tabs (På gång / Har sänts) ----------------------------------------- */
+.tabs {
+  display: flex;
+  gap: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 0 var(--space-1) var(--space-3);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab:hover {
+  color: var(--color-ink);
+}
+.tab[aria-selected='true'] {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-ink);
+}
+.tabCount {
+  color: var(--color-muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
 /* ---- toolbar: search (+ count beneath) on the left, filters on the right --- */
 .toolbar {
   display: flex;
@@ -129,6 +163,9 @@
   flex: 0 0 auto;
   display: none;
 }
+.viewField {
+  flex: 0 0 auto;
+}
 
 /* ---- table -------------------------------------------------------------- */
 .tableScroll {
@@ -161,8 +198,10 @@
   z-index: 2;
 }
 
-.thAvatar { width: 56px; }
+.thFav { width: 44px; text-align: center; }
+.thAvatar { width: 64px; }
 .thDate { width: 116px; }
+.thStatus { width: 72px; text-align: center; }
 .thName { width: 180px; }
 .thFollowers { width: 168px; text-align: right; }
 .thLinks { width: 1%; white-space: nowrap; }
@@ -196,12 +235,46 @@
 .row:hover { background: var(--color-bg-grey); }
 .row[hidden] { display: none; }
 
+/* A live broadcast tints its row a very subtle green. */
+.row[data-live='true'] { background: rgba(34, 197, 94, 0.09); }
+.row[data-live='true']:hover { background: rgba(34, 197, 94, 0.14); }
+
 .table td {
   padding: var(--space-4);
   vertical-align: middle;
 }
 
-.cellAvatar { width: 56px; }
+.cellAvatar { width: 64px; }
+
+/* ---- favourite heart ---------------------------------------------------- */
+.cellFav { width: 44px; text-align: center; }
+.favBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.favBtn:hover {
+  background: var(--color-bg-grey);
+  color: var(--color-ink);
+}
+.favBtn[aria-pressed='true'] {
+  color: #e11d48;
+}
+.favBtn[aria-pressed='true'] svg {
+  fill: #e11d48;
+}
+.favBtn[aria-pressed='true']:hover {
+  color: #be123c;
+}
 
 .cellDate {
   color: var(--color-muted);
@@ -213,11 +286,23 @@
 .cellDate time {
   display: block;
 }
+.timeLabel {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
 
-.todayPill {
-  display: inline-block;
-  margin-top: 5px;
-  padding: 1px 8px;
+/* ---- status pill (Idag / Live) ------------------------------------------ */
+.cellStatus {
+  text-align: center;
+  white-space: nowrap;
+}
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 9px;
   border-radius: var(--radius-pill);
   background: var(--color-accent);
   color: var(--color-accent-ink);
@@ -226,9 +311,14 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  line-height: 1.5;
 }
-.todayPill[hidden] {
+.statusPill[hidden] {
   display: none;
+}
+.statusPill[data-state='live'] {
+  background: #15803d;
+  color: #fff;
 }
 
 .cellName {
@@ -312,7 +402,8 @@
     transition: opacity 0.12s ease, transform 0.12s ease;
     z-index: 60;
   }
-  .iconBtn[data-tip]:hover::after {
+  .iconBtn[data-tip]:hover::after,
+  .iconBtn[data-tip]:focus-visible::after {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
@@ -324,7 +415,139 @@
   color: var(--color-muted);
 }
 
-/* ---- responsive: cards on small screens --------------------------------- */
+/* ---- card view (mobile always; desktop when "Kort" is chosen) ----------- */
+/* `data-cards` is set on <html> by an inline head script + a runtime script:
+   present on mobile, or at any width when the view toggle is "Kort". */
+html[data-cards] .tableScroll {
+  overflow: visible;
+}
+html[data-cards] .table {
+  min-width: 0;
+  display: block;
+}
+html[data-cards] thead {
+  display: none;
+}
+html[data-cards] tbody {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+/* Desktop card view → a 4-column grid of cards. */
+@media (min-width: 641px) {
+  html[data-cards] tbody {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+html[data-cards] .row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'avatar avatar'
+    'name   name'
+    'date   foll'
+    'desc   desc'
+    'links  links';
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  overflow: hidden;
+}
+html[data-cards] .row:hover {
+  background: var(--color-surface);
+}
+/* Keep filtered-out cards hidden (the card `.row` display:grid would otherwise
+   out-specify the base `[hidden]` rule). */
+html[data-cards] .row[hidden] {
+  display: none;
+}
+html[data-cards] .table td {
+  display: block;
+  padding: 0;
+}
+
+/* Edge-to-edge banner photo at the top, height-capped. */
+html[data-cards] .cellAvatar {
+  grid-area: avatar;
+  width: auto;
+  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-4)) var(--space-2);
+}
+html[data-cards] .cellAvatar > span {
+  display: block;
+  width: 100%;
+}
+html[data-cards] .cellAvatar img:first-of-type {
+  width: 100% !important;
+  height: 180px !important;
+  object-fit: cover;
+  object-position: center 28%;
+  border-radius: 0 !important;
+  box-shadow: none;
+}
+
+/* Heart + status sit on top of the photo. */
+html[data-cards] .cellFav {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: auto;
+  z-index: 2;
+}
+html[data-cards] .favBtn {
+  background: rgba(17, 17, 19, 0.45);
+  color: #fff;
+}
+html[data-cards] .favBtn:hover {
+  background: rgba(17, 17, 19, 0.65);
+  color: #fff;
+}
+html[data-cards] .favBtn[aria-pressed='true'] {
+  color: #fb7185;
+}
+html[data-cards] .favBtn[aria-pressed='true'] svg {
+  fill: #fb7185;
+}
+html[data-cards] .cellStatus {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  text-align: left;
+  z-index: 2;
+}
+
+html[data-cards] .cellName {
+  grid-area: name;
+  font-size: 1.1rem;
+}
+html[data-cards] .cellDate {
+  grid-area: date;
+  font-size: 0.85rem;
+}
+html[data-cards] .cellFollowers {
+  grid-area: foll;
+  justify-self: end;
+  align-self: center;
+}
+html[data-cards] .cellDesc {
+  grid-area: desc;
+  min-width: 0;
+}
+html[data-cards] .cellLinks {
+  grid-area: links;
+  padding-top: var(--space-2);
+  white-space: normal;
+}
+html[data-cards] .links {
+  flex-wrap: wrap;
+}
+
+/* ---- responsive toolbar (narrow screens) -------------------------------- */
 @media (max-width: 640px) {
   .searchCol {
     flex: 1 1 100%;
@@ -332,82 +555,10 @@
   .filters {
     flex: 1 1 100%;
   }
-  .filterField {
+  .filterField,
+  .sortField,
+  .viewField {
     display: block;
     flex: 1 1 calc(50% - var(--space-2));
-  }
-  .sortField {
-    display: block;
-    flex: 1 1 100%;
-  }
-
-  /* Drop the scrolling table chrome — each row becomes its own card. */
-  .tableScroll {
-    overflow: visible;
-  }
-  .table {
-    min-width: 0;
-    display: block;
-  }
-  .table thead {
-    display: none;
-  }
-  .table tbody {
-    display: block;
-  }
-
-  .row {
-    display: grid;
-    grid-template-columns: 46px 1fr auto;
-    grid-template-areas:
-      'avatar name name'
-      'avatar date foll'
-      'desc   desc desc'
-      'links  links links';
-    gap: var(--space-1) var(--space-3);
-    align-items: center;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-    box-shadow: var(--shadow-sm);
-    padding: var(--space-4);
-    margin-bottom: var(--space-3);
-  }
-  .row:hover {
-    background: var(--color-surface);
-  }
-
-  .table td {
-    display: block;
-    padding: 0;
-  }
-  .cellAvatar {
-    grid-area: avatar;
-    align-self: center;
-  }
-  .cellName {
-    grid-area: name;
-    font-size: 1.05rem;
-  }
-  .cellDate {
-    grid-area: date;
-    font-size: 0.85rem;
-  }
-  .cellFollowers {
-    grid-area: foll;
-    justify-self: end;
-    align-self: center;
-  }
-  .cellDesc {
-    grid-area: desc;
-    padding-top: var(--space-2);
-  }
-  .cellLinks {
-    grid-area: links;
-    padding-top: var(--space-3);
-    white-space: normal;
-  }
-  .links {
-    flex-wrap: wrap;
   }
 }

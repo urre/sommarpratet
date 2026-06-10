@@ -1,6 +1,7 @@
 ---
 name: "Kristoffer Leandoer"
 date: 2026-08-01
+time: "13:00"
 description: "Författare och översättare"
 instagram: "https://www.instagram.com/swkleandoer/"
 instagramFollowers: 1100

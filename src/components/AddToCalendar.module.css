@@ -114,7 +114,8 @@
     transition: opacity 0.12s ease, transform 0.12s ease;
     z-index: 60;
   }
-  .compact .trigger[data-tip]:hover::after {
+  .compact .trigger[data-tip]:hover::after,
+  .compact .trigger[data-tip]:focus-visible::after {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }

@@ -1,6 +1,7 @@
 ---
 name: "Sofia Dalén"
 date: 2026-08-14
+time: "13:00"
 description: "Komiker"
 instagram: "https://www.instagram.com/sofiadalen/"
 instagramFollowers: 86000

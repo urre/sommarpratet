@@ -48,3 +48,9 @@
     transform: translateY(-50%) scale(1);
   }
 }
+
+/* The hover preview is a list-view feature only — card view shows the photo
+   edge-to-edge already. */
+html[data-cards] .preview {
+  display: none;
+}

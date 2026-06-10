@@ -10,6 +10,8 @@ const sommarpratare = defineCollection({
     name: z.string(),
     /** Broadcast date in Sommar i P1 (YYYY-MM-DD). */
     date: z.coerce.date(),
+    /** Broadcast start time (HH:MM, Europe/Stockholm). Sommar i P1 airs 13:00. */
+    time: z.string().optional(),
     /** Short "known for" line — profession/role. */
     description: z.string().optional(),
     /** Optional explicit profile/article links. When omitted the UI falls back

@@ -5,8 +5,7 @@ import { formatDate, isoDate, monthName, formatFollowers } from '../lib/sommarpr
 import { categorize, type Category } from '../lib/category';
 import {
   instagramLink,
-  xLink,
-  trendsLink,
+  chatgptLink,
   wikipediaLink,
   srLink,
 } from '../lib/links';
@@ -22,13 +21,15 @@ const monthsPresent = [...new Set(hosts.map((h) => h.data.date.getUTCMonth() + 1
 
 // Static inline icons (kept as strings so the action row renders in one loop).
 const IG_SVG =
-  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>';
-const X_SVG =
-  '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
-const TRENDS_SVG =
-  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>';
+  '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>';
+const SHARE_SVG =
+  '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+const CHATGPT_SVG =
+  '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7493-7.073zM13.2599 22.43a4.4764 4.4764 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zM3.6 18.3036a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071.0061L4.0428 13.948a4.504 4.504 0 0 1-1.702-6.0525zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071-.006l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0801.0801 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg>';
 const SR_SVG =
-  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>';
+  '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>';
+const HEART_SVG =
+  '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg>';
 
 // Precompute a view-model per host (no template literals in the template body —
 // the Astro compiler can't parse `${...}` inside element expressions).
@@ -56,11 +57,27 @@ const rows = hosts.map((h) => {
     .join(' ')
     .toLowerCase();
 
-  const actions: Array<{ href: string; title: string; label: string; svg?: string; text?: string }> = [
+  const actions: Array<{
+    href?: string;
+    title: string;
+    label: string;
+    svg?: string;
+    text?: string;
+    share?: boolean;
+    shareTitle?: string;
+    shareUrl?: string;
+  }> = [
     { href: srLink(name, h.data.sr), title: 'Sveriges Radio', label: name + ' på Sveriges Radio', svg: SR_SVG },
     { href: instagramLink(name, h.data.instagram), title: 'Instagram', label: name + ' på Instagram', svg: IG_SVG },
-    { href: xLink(name, h.data.x), title: 'X (Twitter)', label: name + ' på X', svg: X_SVG },
-    { href: trendsLink(name), title: 'Google Trends', label: name + ' på Google Trends', svg: TRENDS_SVG },
+    {
+      share: true,
+      title: 'Dela',
+      label: 'Dela ' + name,
+      svg: SHARE_SVG,
+      shareTitle: 'Sommar i P1: ' + name,
+      shareUrl: h.data.sr ?? '',
+    },
+    { href: chatgptLink(name), title: 'Fråga ChatGPT', label: 'Fråga ChatGPT om ' + name, svg: CHATGPT_SVG },
     { href: wikipediaLink(name, h.data.wikipedia), title: 'Wikipedia', label: name + ' på Wikipedia', text: 'W' },
   ];
 
@@ -73,6 +90,7 @@ const rows = hosts.map((h) => {
     iso,
     month: iso.slice(5, 7),
     dateLabel,
+    time: h.data.time ?? '13:00',
     cat,
     followers,
     followersLabel: formatFollowers(followers),
@@ -81,13 +99,39 @@ const rows = hosts.map((h) => {
   };
 });
 
-// Distinct categories present, for the filter dropdown.
+// Distinct categories present (+ counts) for the filter dropdown.
+const catCounts = new Map<string, number>();
+for (const r of rows) catCounts.set(r.cat.key, (catCounts.get(r.cat.key) ?? 0) + 1);
 const categories: Category[] = [];
 for (const r of rows) if (!categories.some((c) => c.key === r.cat.key)) categories.push(r.cat);
 categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
+
+// Build-time upcoming/past split, rendered into the tab counts + result count so
+// the first paint matches what the client computes — no layout shift (CLS).
+const buildNow = Date.now();
+let upcomingCount = 0;
+for (const r of rows) {
+  const [bh, bm] = r.time.split(':').map((n) => Number.parseInt(n, 10));
+  const end = Date.UTC(r.date.getUTCFullYear(), r.date.getUTCMonth(), r.date.getUTCDate(), bh || 13, bm || 0) + 90 * 60 * 1000;
+  if (end > buildNow) upcomingCount++;
+}
+const pastCount = rows.length - upcomingCount;
+const initialCount = upcomingCount === rows.length ? rows.length + ' sommarpratare' : upcomingCount + ' av ' + rows.length;
 ---
 
 <section class={styles.wrap} data-table>
+  <div class={styles.tabs} role="tablist" aria-label="Sändningsstatus">
+    <button id="sp-tab-upcoming" type="button" class={styles.tab} role="tab" aria-selected="true" aria-controls="sp-results" data-tab="upcoming">
+      Kommande <span class={styles.tabCount} data-tab-count="upcoming">({upcomingCount})</span>
+    </button>
+    <button id="sp-tab-past" type="button" class={styles.tab} role="tab" aria-selected="false" aria-controls="sp-results" tabindex="-1" data-tab="past">
+      Har sänts <span class={styles.tabCount} data-tab-count="past">({pastCount})</span>
+    </button>
+    <button id="sp-tab-favorites" type="button" class={styles.tab} role="tab" aria-selected="false" aria-controls="sp-results" tabindex="-1" data-tab="favorites">
+      Favoriter <span class={styles.tabCount} data-tab-count="favorites">(0)</span>
+    </button>
+  </div>
+
   <div class={styles.toolbar}>
     <div class={styles.searchCol}>
       <div class={styles.searchField}>
@@ -115,14 +159,14 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
           autocomplete="off"
         />
       </div>
-      <p class={styles.count} data-count aria-live="polite"></p>
+      <p class={styles.count} data-count aria-live="polite">{initialCount}</p>
     </div>
 
     <div class={styles.filters}>
       <div class={styles.filterField}>
         <label class="visually-hidden" for="month-filter">Filtrera på månad</label>
         <select id="month-filter" class={styles.select} data-month>
-          <option value="">Alla månader</option>
+          <option value="">Hela sommaren</option>
           {monthsPresent.map((m) => (
             <option value={String(m).padStart(2, '0')}>{monthName(m)}</option>
           ))}
@@ -134,7 +178,7 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
         <select id="category-filter" class={styles.select} data-category>
           <option value="">Alla kategorier</option>
           {categories.map((c) => (
-            <option value={c.key}>{c.label}</option>
+            <option value={c.key}>{c.label + ' (' + catCounts.get(c.key) + ')'}</option>
           ))}
         </select>
       </div>
@@ -150,31 +194,44 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
           <option value="followers-asc">Följare (minst)</option>
         </select>
       </div>
+
+      <div class={styles.viewField}>
+        <label class="visually-hidden" for="view-select">Vy</label>
+        <select id="view-select" class={styles.select} data-view-select>
+          <option value="list">Lista</option>
+          <option value="cards">Kort</option>
+        </select>
+      </div>
     </div>
   </div>
 
-  <div class={styles.tableScroll}>
+  <div class={styles.tableScroll} id="sp-results" role="tabpanel" aria-labelledby="sp-tab-upcoming" tabindex="0">
     <table class={styles.table}>
+      <caption class="visually-hidden">
+        Sommarpratare i Sommar i P1 – sorterbar tabell med datum, namn, beskrivning, antal följare på Instagram och länkar.
+      </caption>
       <thead>
         <tr>
-          <th class={styles.thAvatar}><span class="visually-hidden">Bild</span></th>
-          <th class={styles.thDate} aria-sort="ascending">
+          <th scope="col" class={styles.thFav}><span class="visually-hidden">Favorit</span></th>
+          <th scope="col" class={styles.thAvatar}><span class="visually-hidden">Bild</span></th>
+          <th scope="col" class={styles.thDate} aria-sort="ascending">
             <button type="button" class={styles.sortBtn} data-sort="date">
-              Datum <span class={styles.arrow} data-arrow>▲</span>
+              Datum <span class={styles.arrow} data-arrow aria-hidden="true">▲</span>
             </button>
           </th>
-          <th class={styles.thName}>
+          <th scope="col" class={styles.thStatus}><span class="visually-hidden">Status</span></th>
+          <th scope="col" class={styles.thName}>
             <button type="button" class={styles.sortBtn} data-sort="name">
-              Namn <span class={styles.arrow} data-arrow></span>
+              Namn <span class={styles.arrow} data-arrow aria-hidden="true"></span>
             </button>
           </th>
-          <th class={styles.thDesc}>Beskrivning</th>
-          <th class={styles.thFollowers}>
+          <th scope="col" class={styles.thDesc}>Beskrivning</th>
+          <th scope="col" class={styles.thFollowers}>
             <button type="button" class={styles.sortBtn} data-sort="followers">
-              Följare på Instagram <span class={styles.arrow} data-arrow></span>
+              Följare på Instagram <span class={styles.arrow} data-arrow aria-hidden="true"></span>
             </button>
           </th>
-          <th class={styles.thLinks}>Länkar</th>
+          <th scope="col" class={styles.thLinks}>Länkar</th>
         </tr>
       </thead>
       <tbody data-rows>
@@ -184,17 +241,26 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
             data-row
             data-name={r.name.toLowerCase()}
             data-date={r.iso}
+            data-time={r.time}
             data-month={r.month}
             data-category={r.cat.key}
             data-followers={r.followers ?? ''}
             data-search={r.search}
           >
+            <td class={styles.cellFav}>
+              <button type="button" class={styles.favBtn} data-fav data-id={r.id} aria-pressed="false" aria-label={'Spara ' + r.name + ' som favorit'}>
+                <Fragment set:html={HEART_SVG} />
+              </button>
+            </td>
             <td class={styles.cellAvatar}>
-              <Avatar name={r.name} image={r.image} size={44} preview />
+              <Avatar name={r.name} image={r.image} size={52} preview />
             </td>
             <td class={styles.cellDate}>
-              <time datetime={r.iso}>{r.dateLabel}</time>
-              <span class={styles.todayPill} data-today-pill hidden>Idag</span>
+              <time datetime={r.iso + 'T' + r.time}>{r.dateLabel}</time>
+              <span class={styles.timeLabel}>kl {r.time}</span>
+            </td>
+            <td class={styles.cellStatus}>
+              <span class={styles.statusPill} data-status-pill hidden>Idag</span>
             </td>
             <td class={styles.cellName}>{r.name}</td>
             <td class={styles.cellDesc}>{r.description}</td>
@@ -203,19 +269,33 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
             </td>
             <td class={styles.cellLinks}>
               <div class={styles.links}>
-                {r.actions.map((a) => (
-                  <a
-                    class={styles.iconBtn}
-                    href={a.href}
-                    target="_blank"
-                    rel="noopener"
-                    data-tip={a.title}
-                    aria-label={a.label}
-                  >
-                    {a.svg ? <Fragment set:html={a.svg} /> : <span class={styles.mono}>{a.text}</span>}
-                  </a>
-                ))}
-                <AddToCalendar name={r.name} date={r.date} description={r.description} uid={r.id} variant="compact" />
+                {r.actions.map((a) =>
+                  a.share ? (
+                    <button
+                      type="button"
+                      class={styles.iconBtn}
+                      data-share
+                      data-share-title={a.shareTitle}
+                      data-share-url={a.shareUrl}
+                      data-tip={a.title}
+                      aria-label={a.label}
+                    >
+                      <Fragment set:html={a.svg} />
+                    </button>
+                  ) : (
+                    <a
+                      class={styles.iconBtn}
+                      href={a.href}
+                      target="_blank"
+                      rel="noopener"
+                      data-tip={a.title}
+                      aria-label={a.label}
+                    >
+                      {a.svg ? <Fragment set:html={a.svg} /> : <span class={styles.mono} aria-hidden="true">{a.text}</span>}
+                    </a>
+                  ),
+                )}
+                <AddToCalendar name={r.name} date={r.date} time={r.time} description={r.description} uid={r.id} variant="compact" />
               </div>
             </td>
           </tr>
@@ -228,6 +308,10 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
 </section>
 
 <script>
+  // Small play glyph for the "Live" pill.
+  const PLAY =
+    '<svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+
   function initTable() {
     const root = document.querySelector<HTMLElement>('[data-table]');
     if (!root) return;
@@ -240,22 +324,41 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
     const noResults = root.querySelector<HTMLElement>('[data-no-results]');
     const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-sort]'));
     const sortSelect = root.querySelector<HTMLSelectElement>('[data-sort-select]');
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panel = root.querySelector<HTMLElement>('#sp-results');
+    const upCount = root.querySelector<HTMLElement>('[data-tab-count="upcoming"]');
+    const pastCount = root.querySelector<HTMLElement>('[data-tab-count="past"]');
+    const favCountEl = root.querySelector<HTMLElement>('[data-tab-count="favorites"]');
+    const favBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-fav]'));
+    const viewSelect = root.querySelector<HTMLSelectElement>('[data-view-select]');
     if (!tbody) return;
 
-    // Reveal an "Idag" pill on the row whose broadcast date is today. Computed
-    // client-side so it stays correct on a static build.
-    const now = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const todayIso = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
-    for (const row of rows) {
-      if (row.dataset.date === todayIso) {
-        const pill = row.querySelector<HTMLElement>('[data-today-pill]');
-        if (pill) pill.hidden = false;
-      }
-    }
+    const FAV_KEY = 'sommarpratet:favorites';
+    const VIEW_KEY = 'sommarpratet:view';
+    let favSet = new Set<string>();
+    try {
+      favSet = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
+    } catch (e) {}
 
     let sortKey: 'date' | 'name' | 'followers' = 'date';
     let sortDir = 1; // 1 = ascending, -1 = descending
+    let activeTab: 'upcoming' | 'past' | 'favorites' = 'upcoming';
+
+    // Broadcast window (local time) per row — computed live so the static build
+    // stays correct and rows move from "På gång" to "Har sänts" on their own.
+    const DURATION_MS = 90 * 60 * 1000;
+    function startEnd(row: HTMLElement) {
+      const [Y, M, D] = (row.dataset.date ?? '').split('-').map(Number);
+      const [h, mi] = (row.dataset.time ?? '13:00').split(':').map(Number);
+      const start = new Date(Y, (M || 1) - 1, D || 1, h || 13, mi || 0).getTime();
+      return { start, end: start + DURATION_MS };
+    }
+    const isPast = (row: HTMLElement) => startEnd(row).end <= Date.now();
+    function isLive(row: HTMLElement) {
+      const { start, end } = startEnd(row);
+      const t = Date.now();
+      return t >= start && t < end;
+    }
 
     function cmp(a: HTMLElement, b: HTMLElement) {
       if (sortKey === 'followers') {
@@ -290,13 +393,70 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
       if (sortSelect) sortSelect.value = sortKey + '-' + (sortDir === 1 ? 'asc' : 'desc');
     }
 
+    function saveFavs() {
+      try {
+        localStorage.setItem(FAV_KEY, JSON.stringify([...favSet]));
+      } catch (e) {}
+    }
+    // Reflect the favourite set onto the heart buttons + rows + the tab count.
+    function applyFavs() {
+      for (const btn of favBtns) {
+        const id = btn.dataset.id ?? '';
+        const on = favSet.has(id);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        const row = btn.closest<HTMLElement>('[data-row]');
+        if (row) {
+          if (on) row.dataset.fav = '1';
+          else delete row.dataset.fav;
+        }
+      }
+      if (favCountEl) favCountEl.textContent = '(' + favSet.size + ')';
+    }
+
+    // Status pills (Idag / Live) + the "På gång / Har sänts" tab counts.
+    function updateStatus() {
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const todayIso = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+      let up = 0;
+      let past = 0;
+      for (const row of rows) {
+        if (isPast(row)) past++;
+        else up++;
+        const pill = row.querySelector<HTMLElement>('[data-status-pill]');
+        if (!pill) continue;
+        if (isLive(row)) {
+          row.dataset.live = 'true';
+          pill.dataset.state = 'live';
+          pill.innerHTML = PLAY + 'Live';
+          pill.hidden = false;
+        } else {
+          delete row.dataset.live;
+          if (row.dataset.date === todayIso && !isPast(row)) {
+            delete pill.dataset.state;
+            pill.textContent = 'Idag';
+            pill.hidden = false;
+          } else {
+            delete pill.dataset.state;
+            pill.hidden = true;
+          }
+        }
+      }
+      if (upCount) upCount.textContent = '(' + up + ')';
+      if (pastCount) pastCount.textContent = '(' + past + ')';
+    }
+
     function render() {
       const q = (search?.value ?? '').trim().toLowerCase();
       const m = monthSel?.value ?? '';
       const c = categorySel?.value ?? '';
       let shown = 0;
       for (const row of [...rows].sort(cmp)) {
+        const past = isPast(row);
+        const tabOk =
+          activeTab === 'favorites' ? row.dataset.fav === '1' : activeTab === 'past' ? past : !past;
         const visible =
+          tabOk &&
           (!q || (row.dataset.search ?? '').includes(q)) &&
           (!m || row.dataset.month === m) &&
           (!c || row.dataset.category === c);
@@ -307,8 +467,30 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
       if (count) {
         count.textContent = shown === rows.length ? rows.length + ' sommarpratare' : shown + ' av ' + rows.length;
       }
-      if (noResults) noResults.hidden = shown !== 0;
+      if (noResults) {
+        noResults.hidden = shown !== 0;
+        if (shown === 0) {
+          noResults.textContent =
+            activeTab === 'favorites'
+              ? 'Inga favoriter än – tryck på hjärtat för att spara en sommarpratare.'
+              : 'Inga sommarpratare matchar din sökning.';
+        }
+      }
       syncSortUI();
+    }
+
+    function selectTab(name: 'upcoming' | 'past' | 'favorites', focus?: boolean) {
+      activeTab = name;
+      for (const t of tabs) {
+        const sel = t.dataset.tab === name;
+        t.setAttribute('aria-selected', sel ? 'true' : 'false');
+        t.tabIndex = sel ? 0 : -1;
+        if (sel) {
+          if (panel) panel.setAttribute('aria-labelledby', t.id);
+          if (focus) t.focus();
+        }
+      }
+      render();
     }
 
     search?.addEventListener('input', render);
@@ -332,8 +514,72 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
         render();
       });
     }
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => selectTab(t.dataset.tab as 'upcoming' | 'past' | 'favorites'));
+      t.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        e.preventDefault();
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        const next = tabs[(i + dir + tabs.length) % tabs.length];
+        selectTab(next.dataset.tab as 'upcoming' | 'past' | 'favorites', true);
+      });
+    });
 
+    // Share — Web Share API, with a copy-link fallback where it's unsupported.
+    for (const btn of Array.from(root.querySelectorAll<HTMLButtonElement>('[data-share]'))) {
+      btn.addEventListener('click', async () => {
+        const title = btn.dataset.shareTitle || document.title;
+        const url = btn.dataset.shareUrl || location.href;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title, text: title, url });
+          } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(url);
+            const prev = btn.dataset.tip;
+            btn.dataset.tip = 'Länk kopierad';
+            window.setTimeout(() => {
+              btn.dataset.tip = prev || 'Dela';
+            }, 1500);
+          }
+        } catch (e) {}
+      });
+    }
+
+    // Favourites — toggle hearts, persist to localStorage.
+    for (const btn of favBtns) {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id ?? '';
+        if (favSet.has(id)) favSet.delete(id);
+        else favSet.add(id);
+        saveFavs();
+        applyFavs();
+        render();
+      });
+    }
+
+    // View toggle (list / cards) — available on every screen. The initial state
+    // is applied before first paint by an inline head script (saved choice wins;
+    // mobile defaults to cards), so we just reflect it in the select and react to
+    // explicit user changes (a user-initiated toggle doesn't count as CLS).
+    if (viewSelect) {
+      viewSelect.value = document.documentElement.hasAttribute('data-cards') ? 'cards' : 'list';
+      viewSelect.addEventListener('change', () => {
+        const cards = viewSelect.value === 'cards';
+        try {
+          localStorage.setItem(VIEW_KEY, cards ? 'cards' : 'list');
+        } catch (e) {}
+        document.documentElement.toggleAttribute('data-cards', cards);
+      });
+    }
+
+    applyFavs();
+    updateStatus();
     render();
+    // Re-evaluate live state + tab membership over time (e.g. 13:00 → live).
+    setInterval(() => {
+      updateStatus();
+      render();
+    }, 30000);
   }
 
   if (document.readyState !== 'loading') initTable();

@@ -1,6 +1,7 @@
 ---
 name: "Ebba Kleberg von Sydow"
 date: 2026-07-14
+time: "13:00"
 description: "Journalist och kungaexpert"
 instagram: "https://www.instagram.com/ebbavonsydow/"
 instagramFollowers: 153000

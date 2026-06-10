@@ -12,14 +12,9 @@ export function instagramLink(name: string, explicit?: string): string {
   return explicit ?? `https://www.google.com/search?q=${enc(`${name} instagram`)}`;
 }
 
-/** X (Twitter) has a real search endpoint. */
-export function xLink(name: string, explicit?: string): string {
-  return explicit ?? `https://x.com/search?q=${enc(name)}&src=typed_query`;
-}
-
-/** Google Trends, scoped to Sweden. */
-export function trendsLink(name: string): string {
-  return `https://trends.google.com/trends/explore?geo=SE&q=${enc(name)}`;
+/** Opens ChatGPT with a prefilled question about the host. */
+export function chatgptLink(name: string): string {
+  return `https://chatgpt.com/?q=${enc('Vem är ' + name + '?')}`;
 }
 
 /** MediaWiki "go" endpoint: redirects straight to the article on an exact title

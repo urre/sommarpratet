@@ -1,17 +1,12 @@
-/* Self-hosted Inter (OFL). */
+/* Self-hosted Geist (OFL), variable weight. */
 @font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter-Regular.woff2') format('woff2');
-  font-weight: 400;
+  font-family: 'Geist';
+  src: url('/fonts/Geist.woff2') format('woff2');
+  font-weight: 100 900;
   font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
+  /* `optional` + preload: paints in Geist immediately on virtually all loads,
+     and never swaps late — so the web font causes no layout shift (CLS). */
+  font-display: optional;
 }
 
 :root {
@@ -50,39 +45,18 @@
   --shadow: 0 14px 40px rgba(29, 27, 22, 0.1);
 
   /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --content-width: 1240px;
 }
 
-/* Explicit dark choice (footer toggle). */
-[data-theme='dark'] {
-  color-scheme: dark;
-
-  --color-ink: #f4f4f5;
-  --color-ink-soft: #a1a1aa;
-  --color-muted: #8a8a93;
-  --color-bg: #0c0c0e;
-  --color-bg-grey: #1d1d20;
-  --color-surface: #151517;
-  --color-border: #262629;
-
-  --color-accent: #e4e4e7;
-  --color-accent-soft: #232326;
-  --color-accent-ink: #18181b;
-
-  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.4);
-  --shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
-}
-
-/* Follow the OS colour scheme by default — unless the visitor explicitly chose
-   light via the toggle (then [data-theme='light'] keeps the :root tokens). */
+/* Light or dark follows the OS preference. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root {
     color-scheme: dark;
 
     --color-ink: #f4f4f5;
     --color-ink-soft: #a1a1aa;
-    --color-muted: #8a8a93;
+    --color-muted: #8f8f99;
     --color-bg: #0c0c0e;
     --color-bg-grey: #1d1d20;
     --color-surface: #151517;
@@ -105,6 +79,9 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Reserve the scrollbar gutter so content doesn't shift horizontally when the
+     vertical scrollbar appears/disappears (e.g. when switching tabs/filters). */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -180,4 +157,16 @@ a {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

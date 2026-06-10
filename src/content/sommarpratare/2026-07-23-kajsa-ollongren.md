@@ -1,6 +1,7 @@
 ---
 name: "Kajsa Ollongren"
 date: 2026-07-23
+time: "13:00"
 description: "EU:s särskilda representant för mänskliga rättigheter"
 instagram: "https://www.instagram.com/kajsaollongren/"
 instagramFollowers: 18000

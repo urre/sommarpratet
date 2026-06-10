@@ -1,6 +1,7 @@
 ---
 name: "Pelle Larsson"
 date: 2026-08-05
+time: "13:00"
 description: "Basketspelare, Miami Heat i NBA"
 instagram: "https://www.instagram.com/pellelarsson_/"
 instagramFollowers: 104000

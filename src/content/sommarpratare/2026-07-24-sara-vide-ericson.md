@@ -1,6 +1,7 @@
 ---
 name: "Sara-Vide Ericson"
 date: 2026-07-24
+time: "13:00"
 description: "Konstnär"
 instagram: "https://www.instagram.com/saravidee/"
 instagramFollowers: 23000

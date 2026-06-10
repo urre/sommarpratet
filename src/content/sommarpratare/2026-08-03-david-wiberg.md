@@ -1,6 +1,7 @@
 ---
 name: "David Wiberg"
 date: 2026-08-03
+time: "13:00"
 description: "Skådespelare, författare och komiker"
 instagram: "https://www.instagram.com/david_wiberg/"
 instagramFollowers: 15000

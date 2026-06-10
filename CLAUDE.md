@@ -18,7 +18,7 @@ host in a content collection.
 - **TypeScript**: strict mode
 - **Content**: frontmatter-only Markdown files in `src/content/sommarpratare/`
 - **Styling**: CSS Modules (`*.module.css`) + global design tokens in `src/styles/global.css`
-- **Font**: self-hosted **Inter** (woff2 in `public/fonts/`)
+- **Font**: self-hosted **Geist** (variable woff2 in `public/fonts/Geist.woff2`)
 - **SEO**: `@astrojs/sitemap`; JSON-LD (`WebSite` + `ItemList`/`Person`)
 - **No UI framework / no islands** — interactivity is one small vanilla-TS `<script>` per component
 - **Node**: v22.x
@@ -66,11 +66,13 @@ Each host is a frontmatter-only `.md` file validated against
 |-------|------|----------|-------|
 | name | string | ✅ | Full name as broadcast |
 | date | date (YYYY-MM-DD) | ✅ | Broadcast date in Sommar i P1 |
+| time | string (HH:MM) | optional | Broadcast start (13:00); shown in the table, used for the .ics + live status |
 | description | string | optional | Short Swedish "known for" line |
 | instagram | url | optional | Explicit profile; otherwise a search link is generated |
 | instagramFollowers | number | optional | Approximate follower count (mid-2026 snapshot); shown in the "Följare" column |
 | x | url | optional | Explicit profile; otherwise a search link is generated |
 | wikipedia | url | optional | Explicit article; otherwise a search link is generated |
+| sr | url | optional | Sveriges Radio episode page (shown as the headphones link) |
 | image | string | optional | Portrait; otherwise an initials avatar is shown |
 
 > ⚠️ `instagram`, `x`, `wikipedia` are validated as **URLs**. Omit them rather
@@ -155,10 +157,13 @@ npx astro check    # type-check
 - **Categories**: derived at render from the description by a keyword matcher
   (`lib/category.ts`) and used for the category filter. Not stored in frontmatter
   (edit a description → it re-categorises).
-- **Theme**: follows the OS via `@media (prefers-color-scheme)` by default; the
-  footer toggle sets an explicit `data-theme` on `<html>` (saved to
-  localStorage) that overrides it. `[data-theme='light']` opts back out of the
-  dark media query. Every component reads the same CSS variables.
+- **Theme**: light/dark follows the OS via `@media (prefers-color-scheme)` only
+  (no manual toggle, no JS). Every component reads the same CSS variables; two
+  `theme-color` metas set the browser-chrome colour per scheme.
+- **A11y/vitals**: semantic `<table>` with `<caption>` + `scope="col"`, `aria-sort`
+  on sortable headers, `aria-label` on icon links (decorative SVGs `aria-hidden`),
+  focus-visible tooltips, `prefers-reduced-motion` honoured. Lighthouse 100 a11y/
+  best-practices/SEO; CWV all green (sized images → CLS 0, minimal JS).
 
 ## Notes / Future
 

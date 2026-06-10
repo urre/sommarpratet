@@ -1,6 +1,7 @@
 ---
 name: "Niklas Rådström"
 date: 2026-08-16
+time: "13:00"
 description: "Författare"
 instagram: "https://www.instagram.com/niklasradstrom/"
 instagramFollowers: 200

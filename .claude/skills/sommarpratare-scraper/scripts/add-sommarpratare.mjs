@@ -62,6 +62,7 @@ function frontmatter(host) {
   const lines = ['---'];
   lines.push(`name: ${yamlStr(host.name)}`);
   lines.push(`date: ${host.date}`); // bare YYYY-MM-DD, coerced to Date by Astro
+  if (host.time) lines.push(`time: ${yamlStr(host.time)}`);
   if (host.description) lines.push(`description: ${yamlStr(host.description)}`);
   if (host.instagram) lines.push(`instagram: ${yamlStr(host.instagram)}`);
   if (host.instagramFollowers != null && host.instagramFollowers !== '')

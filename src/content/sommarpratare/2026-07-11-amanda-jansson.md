@@ -1,6 +1,7 @@
 ---
 name: "Amanda Jansson"
 date: 2026-07-11
+time: "13:00"
 description: "Skådespelare"
 instagram: "https://www.instagram.com/adajansson/"
 instagramFollowers: 15000

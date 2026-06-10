@@ -1,6 +1,7 @@
 ---
 name: "Ewa Fröling"
 date: 2026-08-11
+time: "13:00"
 description: "Skådespelare"
 instagram: "https://www.instagram.com/frolingewa/"
 instagramFollowers: 15000

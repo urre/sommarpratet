@@ -1,6 +1,7 @@
 ---
 name: "Erika Bjerström"
 date: 2026-07-06
+time: "13:00"
 description: "Journalist"
 instagram: "https://www.instagram.com/erika.bjerstrom/"
 instagramFollowers: 7000

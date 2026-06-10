@@ -116,11 +116,13 @@ Files validate against `src/content.config.ts`:
 |-------|------|----------|
 | name | string | ✅ |
 | date | date (YYYY-MM-DD) | ✅ |
+| time | string (HH:MM) | optional |
 | description | string | optional |
 | instagram | url | optional |
 | instagramFollowers | number | optional |
 | x | url | optional |
 | wikipedia | url | optional |
+| sr | url | optional |
 | image | string | optional |
 
 > ⚠️ `instagram`, `x`, and `wikipedia` are validated as URLs. Omit them rather

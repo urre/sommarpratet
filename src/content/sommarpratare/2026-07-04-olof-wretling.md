@@ -1,6 +1,7 @@
 ---
 name: "Olof Wretling"
 date: 2026-07-04
+time: "13:00"
 description: "Komiker"
 instagram: "https://www.instagram.com/olofwretling/"
 instagramFollowers: 90000

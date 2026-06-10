@@ -8,21 +8,26 @@ interface Props {
   name: string;
   /** Broadcast date (frontmatter date, UTC midnight). */
   date: Date;
+  /** Broadcast start time (HH:MM). Defaults to 13:00. */
+  time?: string;
   description?: string;
   /** Stable unique id for the event UID (the content entry id). */
   uid: string;
   variant?: 'full' | 'compact';
 }
 
-const { name, date, description = '', uid, variant = 'compact' } = Astro.props;
+const { name, date, time = '13:00', description = '', uid, variant = 'compact' } = Astro.props;
 import styles from './AddToCalendar.module.css';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-// Sommar i P1 airs at 13:00 Europe/Stockholm and runs ~90 minutes. Build from
-// the date's UTC parts + wall-clock time, then emit floating local times
-// (no Z) — which calendar apps read as the viewer's local time, correct for SE.
-const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 13, 0));
+// Sommar i P1 airs at `time` (default 13:00) Europe/Stockholm and runs ~90 min.
+// Build from the date's UTC parts + wall-clock time, then emit floating local
+// times (no Z) — which calendar apps read as the viewer's local time (SE).
+const [hRaw, mRaw] = time.split(':');
+const hh = Number.parseInt(hRaw, 10) || 13;
+const mm = Number.parseInt(mRaw, 10) || 0;
+const start = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), hh, mm));
 const end = new Date(start.getTime() + 90 * 60 * 1000);
 const fmt = (d: Date) =>
   `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00`;

@@ -166,6 +166,35 @@
 .viewField {
   flex: 0 0 auto;
 }
+.viewToggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.viewBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.viewBtn:hover {
+  color: var(--color-ink);
+}
+.viewBtn[aria-pressed='true'] {
+  background: var(--color-bg-grey);
+  color: var(--color-ink);
+}
 
 /* ---- table -------------------------------------------------------------- */
 .tableScroll {
@@ -560,5 +589,13 @@ html[data-cards] .links {
   .viewField {
     display: block;
     flex: 1 1 calc(50% - var(--space-2));
+  }
+  /* The view toggle fills its half-width cell on mobile. */
+  .viewToggle {
+    display: flex;
+    width: 100%;
+  }
+  .viewBtn {
+    flex: 1;
   }
 }

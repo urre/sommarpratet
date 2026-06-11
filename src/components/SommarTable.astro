@@ -125,7 +125,7 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       Kommande <span class={styles.tabCount} data-tab-count="upcoming">({upcomingCount})</span>
     </button>
     <button id="sp-tab-past" type="button" class={styles.tab} role="tab" aria-selected="false" aria-controls="sp-results" tabindex="-1" data-tab="past">
-      Har sänts <span class={styles.tabCount} data-tab-count="past">({pastCount})</span>
+      Sänts <span class={styles.tabCount} data-tab-count="past">({pastCount})</span>
     </button>
     <button id="sp-tab-favorites" type="button" class={styles.tab} role="tab" aria-selected="false" aria-controls="sp-results" tabindex="-1" data-tab="favorites">
       Favoriter <span class={styles.tabCount} data-tab-count="favorites">(0)</span>
@@ -196,11 +196,26 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       </div>
 
       <div class={styles.viewField}>
-        <label class="visually-hidden" for="view-select">Vy</label>
-        <select id="view-select" class={styles.select} data-view-select>
-          <option value="list">Lista</option>
-          <option value="cards">Kort</option>
-        </select>
+        <div class={styles.viewToggle} role="group" aria-label="Vy">
+          <button type="button" class={styles.viewBtn} data-view-btn="list" aria-pressed="true" aria-label="Visa som lista">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="8" y1="6" x2="20" y2="6"></line>
+              <line x1="8" y1="12" x2="20" y2="12"></line>
+              <line x1="8" y1="18" x2="20" y2="18"></line>
+              <line x1="4" y1="6" x2="4.01" y2="6"></line>
+              <line x1="4" y1="12" x2="4.01" y2="12"></line>
+              <line x1="4" y1="18" x2="4.01" y2="18"></line>
+            </svg>
+          </button>
+          <button type="button" class={styles.viewBtn} data-view-btn="cards" aria-pressed="false" aria-label="Visa som kort">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -330,7 +345,7 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     const pastCount = root.querySelector<HTMLElement>('[data-tab-count="past"]');
     const favCountEl = root.querySelector<HTMLElement>('[data-tab-count="favorites"]');
     const favBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-fav]'));
-    const viewSelect = root.querySelector<HTMLSelectElement>('[data-view-select]');
+    const viewBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-view-btn]'));
     if (!tbody) return;
 
     const FAV_KEY = 'sommarpratet:favorites';
@@ -561,16 +576,23 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     // is applied before first paint by an inline head script (saved choice wins;
     // mobile defaults to cards), so we just reflect it in the select and react to
     // explicit user changes (a user-initiated toggle doesn't count as CLS).
-    if (viewSelect) {
-      viewSelect.value = document.documentElement.hasAttribute('data-cards') ? 'cards' : 'list';
-      viewSelect.addEventListener('change', () => {
-        const cards = viewSelect.value === 'cards';
+    function syncViewButtons() {
+      const cards = document.documentElement.hasAttribute('data-cards');
+      for (const b of viewBtns) {
+        b.setAttribute('aria-pressed', (b.dataset.viewBtn === 'cards') === cards ? 'true' : 'false');
+      }
+    }
+    for (const b of viewBtns) {
+      b.addEventListener('click', () => {
+        const cards = b.dataset.viewBtn === 'cards';
         try {
           localStorage.setItem(VIEW_KEY, cards ? 'cards' : 'list');
         } catch (e) {}
         document.documentElement.toggleAttribute('data-cards', cards);
+        syncViewButtons();
       });
     }
+    syncViewButtons();
 
     applyFavs();
     updateStatus();

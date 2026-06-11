@@ -159,7 +159,16 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
           autocomplete="off"
         />
       </div>
-      <p class={styles.count} data-count aria-live="polite">{initialCount}</p>
+      <div class={styles.meta}>
+        <p class={styles.count} data-count aria-live="polite">{initialCount}</p>
+        <button type="button" class={styles.clearBtn} data-clear hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Rensa filter
+        </button>
+      </div>
     </div>
 
     <div class={styles.filters}>
@@ -336,6 +345,7 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     const tbody = root.querySelector<HTMLElement>('[data-rows]');
     const rows = Array.from(root.querySelectorAll<HTMLElement>('[data-row]'));
     const count = root.querySelector<HTMLElement>('[data-count]');
+    const clearBtn = root.querySelector<HTMLButtonElement>('[data-clear]');
     const noResults = root.querySelector<HTMLElement>('[data-no-results]');
     const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-sort]'));
     const sortSelect = root.querySelector<HTMLSelectElement>('[data-sort-select]');
@@ -482,6 +492,7 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       if (count) {
         count.textContent = shown === rows.length ? rows.length + ' sommarpratare' : shown + ' av ' + rows.length;
       }
+      if (clearBtn) clearBtn.hidden = !(q || m || c);
       if (noResults) {
         noResults.hidden = shown !== 0;
         if (shown === 0) {
@@ -508,9 +519,30 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       render();
     }
 
+    // Keep category + month in the URL (?kategori=&manad=) — deep-linkable + combinable.
+    function writeFilterUrl() {
+      const p = new URLSearchParams();
+      if (categorySel?.value) p.set('kategori', categorySel.value);
+      if (monthSel?.value) p.set('manad', monthSel.value);
+      const qs = p.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+    }
     search?.addEventListener('input', render);
-    monthSel?.addEventListener('change', render);
-    categorySel?.addEventListener('change', render);
+    monthSel?.addEventListener('change', () => {
+      writeFilterUrl();
+      render();
+    });
+    categorySel?.addEventListener('change', () => {
+      writeFilterUrl();
+      render();
+    });
+    clearBtn?.addEventListener('click', () => {
+      if (search) search.value = '';
+      if (monthSel) monthSel.value = '';
+      if (categorySel) categorySel.value = '';
+      writeFilterUrl();
+      render();
+    });
     sortSelect?.addEventListener('change', () => {
       const [key, dir] = sortSelect.value.split('-');
       sortKey = key as 'date' | 'name' | 'followers';
@@ -593,6 +625,17 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       });
     }
     syncViewButtons();
+
+    // Deep link: restore category + month from the URL (?kategori=, ?manad=) on load.
+    const params = new URLSearchParams(location.search);
+    const catParam = params.get('kategori');
+    if (catParam && categorySel && [...categorySel.options].some((o) => o.value === catParam)) {
+      categorySel.value = catParam;
+    }
+    const monthParam = params.get('manad');
+    if (monthParam && monthSel && [...monthSel.options].some((o) => o.value === monthParam)) {
+      monthSel.value = monthParam;
+    }
 
     applyFavs();
     updateStatus();

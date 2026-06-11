@@ -1,12 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SommarTable from '../components/SommarTable.astro';
-import { getHosts, formatDate, isoDate } from '../lib/sommarpratare';
+import { getHosts, isoDate } from '../lib/sommarpratare';
 import styles from './index.module.css';
 
 const hosts = await getHosts();
 const first = hosts[0]?.data.date;
-const last = hosts[hosts.length - 1]?.data.date;
 const year = first?.getUTCFullYear() ?? new Date().getUTCFullYear();
 const site = Astro.site ?? Astro.url;
 
@@ -41,10 +40,8 @@ const itemListSchema = {
   <header class={styles.hero}>
     <h1 class={styles.title}><a href="/" class={styles.titleLink}>Sommarpratet</a></h1>
     <p class={styles.lede}>
-      Alla {hosts.length} sommarpratare i Sommar i P1 {year}
-      {first && last && (
-        <> – från {formatDate(first)} till {formatDate(last)}</>
-      )}. Spara dina favoriter och lägg till sändningarna direkt i din kalender.
+      En lite bättre översikt över årets sommarpratare. Spara dina favoriter och lägg
+      till sändningarna direkt i din kalender.
     </p>
   </header>
 

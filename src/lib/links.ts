@@ -28,3 +28,9 @@ export function wikipediaLink(name: string, explicit?: string): string {
 export function srLink(name: string, explicit?: string): string {
   return explicit ?? `https://sverigesradio.se/sok?query=${enc(name)}`;
 }
+
+/** The numeric episode id in an SR episode URL (…/avsnitt/2815547), or null.
+    Used to look the episode's podcast file up in SR's open API at play time. */
+export function srEpisodeId(url?: string): string | null {
+  return url?.match(/\/avsnitt\/(\d+)/)?.[1] ?? null;
+}

@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import SommarTable from '../components/SommarTable.astro';
+import Player from '../components/Player.astro';
 import { getHosts, isoDate } from '../lib/sommarpratare';
 import styles from './index.module.css';
 
@@ -46,4 +47,5 @@ const itemListSchema = {
   </header>
 
   <SommarTable hosts={hosts} />
+  <Player />
 </Layout>

@@ -126,6 +126,14 @@ a {
   padding: 0 var(--space-5);
 }
 
+/* While the sticky player is open, keep the last rows reachable above the bar. */
+html[data-player-open] body {
+  padding-bottom: 108px;
+}
+html[data-player-open] {
+  scroll-padding-bottom: 108px;
+}
+
 /* Accessibility: visible only to screen readers. */
 .visually-hidden {
   position: absolute;

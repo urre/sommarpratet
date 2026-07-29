@@ -8,6 +8,7 @@ import {
   chatgptLink,
   wikipediaLink,
   srLink,
+  srEpisodeId,
 } from '../lib/links';
 import type { Host } from '../lib/sommarpratare';
 import styles from './SommarTable.module.css';
@@ -30,6 +31,18 @@ const SR_SVG =
   '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/></svg>';
 const HEART_SVG =
   '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg>';
+const PLAY_SVG =
+  '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+
+// Build-time broadcast-window check, reused for the tab counts and for the
+// initial visibility of the listen buttons. The client recomputes both live.
+const buildNow = Date.now();
+const airState = (date: Date, time: string) => {
+  const [bh, bm] = time.split(':').map((n) => Number.parseInt(n, 10));
+  const start = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), bh || 13, bm || 0);
+  const end = start + 90 * 60 * 1000;
+  return { past: end <= buildNow, live: buildNow >= start && buildNow < end };
+};
 
 // Precompute a view-model per host (no template literals in the template body —
 // the Astro compiler can't parse `${...}` inside element expressions).
@@ -81,6 +94,9 @@ const rows = hosts.map((h) => {
     { href: wikipediaLink(name, h.data.wikipedia), title: 'Wikipedia', label: name + ' på Wikipedia', text: 'W' },
   ];
 
+  const time = h.data.time ?? '13:00';
+  const air = airState(date, time);
+
   return {
     id: h.id,
     name,
@@ -90,12 +106,19 @@ const rows = hosts.map((h) => {
     iso,
     month: iso.slice(5, 7),
     dateLabel,
-    time: h.data.time ?? '13:00',
+    time,
+    past: air.past,
+    live: air.live,
     cat,
     followers,
     followersLabel: formatFollowers(followers),
     search,
     actions,
+    // Only episodes with a known SR episode id can be resolved to an mp3.
+    episodeId: srEpisodeId(h.data.sr),
+    playMeta: 'Sommar i P1 · ' + dateLabel,
+    // A live broadcast isn't in the podcast feed yet — that one links out to SR.
+    srHref: srLink(name, h.data.sr),
   };
 });
 
@@ -108,14 +131,8 @@ categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
 
 // Build-time upcoming/past split, rendered into the tab counts + result count so
 // the first paint matches what the client computes — no layout shift (CLS).
-const buildNow = Date.now();
-let upcomingCount = 0;
-for (const r of rows) {
-  const [bh, bm] = r.time.split(':').map((n) => Number.parseInt(n, 10));
-  const end = Date.UTC(r.date.getUTCFullYear(), r.date.getUTCMonth(), r.date.getUTCDate(), bh || 13, bm || 0) + 90 * 60 * 1000;
-  if (end > buildNow) upcomingCount++;
-}
-const pastCount = rows.length - upcomingCount;
+const pastCount = rows.filter((r) => r.past).length;
+const upcomingCount = rows.length - pastCount;
 const initialCount = upcomingCount === rows.length ? rows.length + ' sommarpratare' : upcomingCount + ' av ' + rows.length;
 ---
 
@@ -293,6 +310,35 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
             </td>
             <td class={styles.cellLinks}>
               <div class={styles.links}>
+                {r.episodeId && (
+                  <button
+                    type="button"
+                    class={styles.iconBtn + ' ' + styles.playRowBtn}
+                    data-play
+                    data-episode={r.episodeId}
+                    data-host={r.name}
+                    data-meta={r.playMeta}
+                    data-image={r.image ?? ''}
+                    data-tip="Lyssna"
+                    aria-label={'Lyssna på ' + r.name}
+                    aria-pressed="false"
+                    hidden={!r.past}
+                  >
+                    <Fragment set:html={PLAY_SVG} />
+                  </button>
+                )}
+                <a
+                  class={styles.iconBtn + ' ' + styles.playRowBtn + ' ' + styles.playLiveBtn}
+                  href={r.srHref}
+                  target="_blank"
+                  rel="noopener"
+                  data-play-live
+                  data-tip="Lyssna live"
+                  aria-label={'Lyssna live på ' + r.name + ' hos Sveriges Radio'}
+                  hidden={!r.live}
+                >
+                  <Fragment set:html={PLAY_SVG} />
+                </a>
                 {r.actions.map((a) =>
                   a.share ? (
                     <button
@@ -446,18 +492,26 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       let up = 0;
       let past = 0;
       for (const row of rows) {
-        if (isPast(row)) past++;
+        const done = isPast(row);
+        const live = isLive(row);
+        if (done) past++;
         else up++;
+        // In-page playback needs the podcast file, which only exists once the
+        // episode has aired. While it's on air, link out to SR's live player.
+        const playBtn = row.querySelector<HTMLElement>('[data-play]');
+        if (playBtn) playBtn.hidden = !done;
+        const liveBtn = row.querySelector<HTMLElement>('[data-play-live]');
+        if (liveBtn) liveBtn.hidden = !live;
         const pill = row.querySelector<HTMLElement>('[data-status-pill]');
         if (!pill) continue;
-        if (isLive(row)) {
+        if (live) {
           row.dataset.live = 'true';
           pill.dataset.state = 'live';
           pill.innerHTML = PLAY + 'Live';
           pill.hidden = false;
         } else {
           delete row.dataset.live;
-          if (row.dataset.date === todayIso && !isPast(row)) {
+          if (row.dataset.date === todayIso && !done) {
             delete pill.dataset.state;
             pill.textContent = 'Idag';
             pill.hidden = false;

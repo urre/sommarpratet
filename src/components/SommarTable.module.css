@@ -432,6 +432,48 @@
   letter-spacing: -0.02em;
 }
 
+/* ---- listen button (aired episodes only) -------------------------------- */
+/* Hidden until the client confirms the episode has aired; `hidden` alone would
+   lose to the inline-flex on .iconBtn. */
+.playRowBtn[hidden] {
+  display: none;
+}
+/* Listening is the main thing you can do with an aired episode, so this one
+   carries a soft fill — a step up from the plain icon links next to it. */
+.playRowBtn {
+  color: var(--color-ink);
+  background: var(--color-accent-soft);
+  border-color: var(--color-border);
+}
+.playRowBtn:hover,
+.playRowBtn[aria-pressed='true'] {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+/* While the episode is on air there's no podcast file yet, so this one is a
+   link out to SR's live player. Green ties it to the LIVE pill on the row. */
+.playLiveBtn[hidden] {
+  display: none;
+}
+.playLiveBtn,
+.playLiveBtn:hover {
+  background: #15803d;
+  color: #fff;
+  border-color: transparent;
+}
+.playLiveBtn:hover {
+  background: #166534;
+}
+
+/* The row that's currently in the player gets a subtle tint. */
+.row[data-playing] {
+  background: var(--color-bg-grey);
+}
+.row[data-playing='true'] {
+  background: var(--color-accent-soft);
+}
+
 /* Small custom tooltips on hover (desktop only). */
 @media (hover: hover) and (min-width: 1024px) {
   .iconBtn {
@@ -516,6 +558,11 @@ html[data-cards] .row {
 }
 html[data-cards] .row:hover {
   background: var(--color-surface);
+}
+html[data-cards] .row[data-playing='true'],
+html[data-cards] .row[data-playing='true']:hover {
+  background: var(--color-accent-soft);
+  border-color: var(--color-ink-soft);
 }
 /* Keep filtered-out cards hidden (the card `.row` display:grid would otherwise
    out-specify the base `[hidden]` rule). */

@@ -1,6 +1,6 @@
 ---
 name: "Ewa Fröling"
-date: 2026-08-11
+date: 2026-07-25
 time: "13:00"
 description: "Skådespelare"
 instagram: "https://www.instagram.com/frolingewa/"

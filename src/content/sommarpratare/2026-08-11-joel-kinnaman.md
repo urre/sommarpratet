@@ -1,6 +1,6 @@
 ---
 name: "Joel Kinnaman"
-date: 2026-07-25
+date: 2026-08-11
 time: "13:00"
 description: "Skådespelare"
 instagram: "https://www.instagram.com/joelkinnaman/"

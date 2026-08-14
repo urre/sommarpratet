@@ -13,14 +13,37 @@ const RULES: { match: RegExp; cat: Category }[] = [
   { match: /skådespelare/, cat: { key: 'skadespelare', label: 'Skådespelare', emoji: '🎭' } },
   { match: /komiker/, cat: { key: 'komiker', label: 'Komiker', emoji: '😄' } },
   { match: /journalist|korrespondent|kungaexpert/, cat: { key: 'journalist', label: 'Journalist', emoji: '📰' } },
-  { match: /författare|poet|illustratör|översättare/, cat: { key: 'forfattare', label: 'Författare', emoji: '📚' } },
+  // "författar" as a stem, so "författarduo" lands here too.
+  { match: /författar|poet|illustratör|översättare/, cat: { key: 'forfattare', label: 'Författare', emoji: '📚' } },
   { match: /youtuber|influencer|sociala medier/, cat: { key: 'sociala-medier', label: 'Sociala medier', emoji: '📱' } },
-  { match: /\bdj\b|artist|sångerska|sångare|violinist|opera|musiker/, cat: { key: 'musik', label: 'Musik', emoji: '🎵' } },
-  { match: /konstnär|koreograf|clown|smink|dramatiker|scenograf|dansare/, cat: { key: 'konst-scen', label: 'Konst & scen', emoji: '🎨' } },
-  { match: /fotboll|basket|friidrott|idrott|alpinist|simlärare|simskola|sjöjungfru|athlet/, cat: { key: 'idrott', label: 'Idrott', emoji: '🏅' } },
-  { match: /\bvd\b|grundare|finansman|näringsliv|entreprenör|ekonom/, cat: { key: 'naringsliv', label: 'Näringsliv', emoji: '💼' } },
-  { match: /professor|doktor|fysiker|läkare|neurokirurg|forskare|expert|medicin/, cat: { key: 'forskare', label: 'Forskare & expert', emoji: '🔬' } },
-  { match: /advokat|biskop|fn:s|\bfn\b|eu:s|\beu\b|nobel|fredspris|socialarbetare|brandman|minister|ambassad|representant/, cat: { key: 'samhalle', label: 'Samhälle', emoji: '🏛️' } },
+  { match: /kock|matprofil|krögare|bagare/, cat: { key: 'mat', label: 'Mat', emoji: '🍳' } },
+  // Not "sommarvärd" — that's the show's own title, and the descriptions that
+  // use it carry the person's actual role ("brandman från Kalmar") alongside.
+  { match: /programledare|poddare|radiopratare/, cat: { key: 'radio-tv', label: 'Radio & TV', emoji: '📻' } },
+  {
+    match: /\bdj\b|artist|sångerska|sångare|violinist|opera|musiker|pianist|rappare|songwriter|låtskrivare|basist|dirigent/,
+    cat: { key: 'musik', label: 'Musik', emoji: '🎵' },
+  },
+  {
+    match: /konstnär|koreograf|clown|smink|dramatiker|scenograf|dansare|regissör|cirkus/,
+    cat: { key: 'konst-scen', label: 'Konst & scen', emoji: '🎨' },
+  },
+  {
+    match: /fotboll|basket|friidrott|idrott|alpinist|simlärare|simskola|sjöjungfru|athlet|skidåkare|volleyboll|proffs|målvakt|domare/,
+    cat: { key: 'idrott', label: 'Idrott', emoji: '🏅' },
+  },
+  {
+    match: /\bvd\b|grundare|finansman|näringsliv|entreprenör|ekonom|företagare|designchef|riksbank/,
+    cat: { key: 'naringsliv', label: 'Näringsliv', emoji: '💼' },
+  },
+  {
+    match: /professor|doktor|fysiker|läkare|neurokirurg|forskare|expert|medicin|filosof|historiker|analytiker|olog\b|astronaut|rymd/,
+    cat: { key: 'forskare', label: 'Forskare & expert', emoji: '🔬' },
+  },
+  {
+    match: /advokat|biskop|fn:s|\bfn\b|eu:s|\beu\b|nobel|fredspris|socialarbetare|brandman|minister|ambassad|representant|talman|diplomat|polis|nato|soldat|löjtnant|militär|människorätt|predikant|rektor|sköterska|generaldirektör/,
+    cat: { key: 'samhalle', label: 'Samhälle', emoji: '🏛️' },
+  },
 ];
 
 const OTHER: Category = { key: 'ovrigt', label: 'Övrigt', emoji: '📌' };

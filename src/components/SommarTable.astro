@@ -1,7 +1,7 @@
 ---
 import Avatar from './Avatar.astro';
 import AddToCalendar from './AddToCalendar.astro';
-import { formatDate, isoDate, monthName, formatFollowers } from '../lib/sommarpratare';
+import { formatDate, isoDate, monthName } from '../lib/sommarpratare';
 import { categorize, type Category } from '../lib/category';
 import {
   instagramLink,
@@ -19,6 +19,12 @@ interface Props {
 const { hosts } = Astro.props;
 
 const monthsPresent = [...new Set(hosts.map((h) => h.data.date.getUTCMonth() + 1))].sort((a, b) => a - b);
+
+// Seasons present, newest first. The newest one is "this year" — it owns the
+// Kommande/Sänts split; every earlier season gets its own tab.
+const years = [...new Set(hosts.map((h) => h.data.date.getUTCFullYear()))].sort((a, b) => b - a);
+const currentYear = years[0];
+const pastYears = years.slice(1);
 
 // Static inline icons (kept as strings so the action row renders in one loop).
 const IG_SVG =
@@ -54,7 +60,6 @@ const rows = hosts.map((h) => {
   const monthFull = monthName(date.getUTCMonth() + 1).toLowerCase();
   const dateLabel = formatDate(date);
   const cat = categorize(description);
-  const followers = h.data.instagramFollowers ?? null;
 
   // Searchable haystack: name + role + category + several date spellings so the
   // quick search matches "komiker", "juni", "20 juli", "2026-08-16", "16 aug"…
@@ -104,14 +109,13 @@ const rows = hosts.map((h) => {
     date,
     image: h.data.image,
     iso,
+    year: date.getUTCFullYear(),
     month: iso.slice(5, 7),
     dateLabel,
     time,
     past: air.past,
     live: air.live,
     cat,
-    followers,
-    followersLabel: formatFollowers(followers),
     search,
     actions,
     // Only episodes with a known SR episode id can be resolved to an mp3.
@@ -122,30 +126,89 @@ const rows = hosts.map((h) => {
   };
 });
 
-// Distinct categories present (+ counts) for the filter dropdown.
-const catCounts = new Map<string, number>();
-for (const r of rows) catCounts.set(r.cat.key, (catCounts.get(r.cat.key) ?? 0) + 1);
+// Build-time upcoming/past split — of *this year's* season only; earlier
+// seasons live behind their own tabs. Rendered into the tab counts + result
+// count so the first paint matches what the client computes (no CLS).
+const currentRows = rows.filter((r) => r.year === currentYear);
+const pastCount = currentRows.filter((r) => r.past).length;
+const upcomingCount = currentRows.length - pastCount;
+const yearCounts = new Map<number, number>();
+for (const r of rows) yearCounts.set(r.year, (yearCounts.get(r.year) ?? 0) + 1);
+
+// Once the season is over "Kommande" is empty, so open on "Sänts" instead.
+const initialTab = upcomingCount > 0 ? 'upcoming' : 'past';
+const inInitialTab = (r: (typeof rows)[number]) =>
+  r.year === currentYear && (initialTab === 'past' ? r.past : !r.past);
+const initialRows = rows.filter(inInitialTab);
+const initialCount = initialRows.length + ' sommarpratare';
+
+// Every category present across all seasons (the option list is stable as you
+// switch tabs); the counts are for the tab shown first and are recomputed
+// client-side whenever the active tab or the other filters change.
 const categories: Category[] = [];
 for (const r of rows) if (!categories.some((c) => c.key === r.cat.key)) categories.push(r.cat);
 categories.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
-
-// Build-time upcoming/past split, rendered into the tab counts + result count so
-// the first paint matches what the client computes — no layout shift (CLS).
-const pastCount = rows.filter((r) => r.past).length;
-const upcomingCount = rows.length - pastCount;
-const initialCount = upcomingCount === rows.length ? rows.length + ' sommarpratare' : upcomingCount + ' av ' + rows.length;
+const catCounts = new Map<string, number>();
+for (const r of initialRows) catCounts.set(r.cat.key, (catCounts.get(r.cat.key) ?? 0) + 1);
 ---
 
-<section class={styles.wrap} data-table>
-  <div class={styles.tabs} role="tablist" aria-label="Sändningsstatus">
-    <button id="sp-tab-upcoming" type="button" class={styles.tab} role="tab" aria-selected="true" aria-controls="sp-results" data-tab="upcoming">
+<section class={styles.wrap} data-table data-current-year={String(currentYear)} data-initial-tab={initialTab}>
+  <div class={styles.tabsRow}>
+  <div class={styles.tabs} role="tablist" aria-label="Sändningsstatus och årgång" data-tabs>
+    <button
+      id="sp-tab-upcoming"
+      type="button"
+      class={styles.tab}
+      role="tab"
+      aria-selected={initialTab === 'upcoming' ? 'true' : 'false'}
+      aria-controls="sp-results"
+      tabindex={initialTab === 'upcoming' ? '0' : '-1'}
+      data-tab="upcoming"
+    >
       Kommande <span class={styles.tabCount} data-tab-count="upcoming">({upcomingCount})</span>
     </button>
-    <button id="sp-tab-past" type="button" class={styles.tab} role="tab" aria-selected="false" aria-controls="sp-results" tabindex="-1" data-tab="past">
+    <button
+      id="sp-tab-past"
+      type="button"
+      class={styles.tab}
+      role="tab"
+      aria-selected={initialTab === 'past' ? 'true' : 'false'}
+      aria-controls="sp-results"
+      tabindex={initialTab === 'past' ? '0' : '-1'}
+      data-tab="past"
+    >
       Sänts <span class={styles.tabCount} data-tab-count="past">({pastCount})</span>
     </button>
     <button id="sp-tab-favorites" type="button" class={styles.tab} role="tab" aria-selected="false" aria-controls="sp-results" tabindex="-1" data-tab="favorites">
       Favoriter <span class={styles.tabCount} data-tab-count="favorites">(0)</span>
+    </button>
+
+    {pastYears.length > 0 && <span class={styles.tabsDivider} aria-hidden="true"></span>}
+    {pastYears.map((y) => (
+      <button
+        id={'sp-tab-year-' + y}
+        type="button"
+        class={styles.tab + ' ' + styles.tabYear}
+        role="tab"
+        aria-selected="false"
+        aria-controls="sp-results"
+        tabindex="-1"
+        aria-label={'Sommarpratare ' + y}
+        data-tab={'year:' + y}
+      >
+        {y} <span class={styles.tabCount}>({yearCounts.get(y)})</span>
+      </button>
+    ))}
+  </div>
+
+    <button
+      type="button"
+      class={styles.shareTab}
+      data-share-tab
+      data-tip="Dela vyn"
+      aria-label="Dela den här vyn"
+    >
+      <Fragment set:html={SHARE_SVG} />
     </button>
   </div>
 
@@ -204,7 +267,9 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
         <select id="category-filter" class={styles.select} data-category>
           <option value="">Alla kategorier</option>
           {categories.map((c) => (
-            <option value={c.key}>{c.label + ' (' + catCounts.get(c.key) + ')'}</option>
+            <option value={c.key} data-label={c.label} disabled={!catCounts.get(c.key)}>
+              {c.label + ' (' + (catCounts.get(c.key) ?? 0) + ')'}
+            </option>
           ))}
         </select>
       </div>
@@ -216,8 +281,6 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
           <option value="date-desc">Datum (senast)</option>
           <option value="name-asc">Namn (A–Ö)</option>
           <option value="name-desc">Namn (Ö–A)</option>
-          <option value="followers-desc">Följare (flest)</option>
-          <option value="followers-asc">Följare (minst)</option>
         </select>
       </div>
 
@@ -249,7 +312,7 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
   <div class={styles.tableScroll} id="sp-results" role="tabpanel" aria-labelledby="sp-tab-upcoming" tabindex="0">
     <table class={styles.table}>
       <caption class="visually-hidden">
-        Sommarpratare i Sommar i P1 – sorterbar tabell med datum, namn, beskrivning, antal följare på Instagram och länkar.
+        Sommarpratare i Sommar i P1 – sorterbar tabell med datum, år, namn, beskrivning och länkar.
       </caption>
       <thead>
         <tr>
@@ -260,6 +323,7 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
               Datum <span class={styles.arrow} data-arrow aria-hidden="true">▲</span>
             </button>
           </th>
+          <th scope="col" class={styles.thYear}>År</th>
           <th scope="col" class={styles.thStatus}><span class="visually-hidden">Status</span></th>
           <th scope="col" class={styles.thName}>
             <button type="button" class={styles.sortBtn} data-sort="name">
@@ -267,11 +331,6 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
             </button>
           </th>
           <th scope="col" class={styles.thDesc}>Beskrivning</th>
-          <th scope="col" class={styles.thFollowers}>
-            <button type="button" class={styles.sortBtn} data-sort="followers">
-              Följare på Instagram <span class={styles.arrow} data-arrow aria-hidden="true"></span>
-            </button>
-          </th>
           <th scope="col" class={styles.thLinks}>Länkar</th>
         </tr>
       </thead>
@@ -280,12 +339,13 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
           <tr
             class={styles.row}
             data-row
+            hidden={!inInitialTab(r)}
             data-name={r.name.toLowerCase()}
             data-date={r.iso}
             data-time={r.time}
+            data-year={String(r.year)}
             data-month={r.month}
             data-category={r.cat.key}
-            data-followers={r.followers ?? ''}
             data-search={r.search}
           >
             <td class={styles.cellFav}>
@@ -297,17 +357,15 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
               <Avatar name={r.name} image={r.image} size={52} preview />
             </td>
             <td class={styles.cellDate}>
-              <time datetime={r.iso + 'T' + r.time}>{r.dateLabel}</time>
+              <time datetime={r.iso + 'T' + r.time}>{r.dateLabel}</time><span class={styles.yearLabel}>{r.year}</span>
               <span class={styles.timeLabel}>kl {r.time}</span>
             </td>
+            <td class={styles.cellYear}>{r.year}</td>
             <td class={styles.cellStatus}>
               <span class={styles.statusPill} data-status-pill hidden>Idag</span>
             </td>
             <td class={styles.cellName}>{r.name}</td>
             <td class={styles.cellDesc}>{r.description}</td>
-            <td class={styles.cellFollowers}>
-              {r.followers != null ? r.followersLabel : <span class={styles.follNone}>—</span>}
-            </td>
             <td class={styles.cellLinks}>
               <div class={styles.links}>
                 {r.episodeId && (
@@ -383,8 +441,10 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     '<svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 
   function initTable() {
-    const root = document.querySelector<HTMLElement>('[data-table]');
-    if (!root) return;
+    const rootEl = document.querySelector<HTMLElement>('[data-table]');
+    if (!rootEl) return;
+    // Rebound as non-nullable so the narrowing survives into the closures below.
+    const root: HTMLElement = rootEl;
     const search = root.querySelector<HTMLInputElement>('[data-search]');
     const monthSel = root.querySelector<HTMLSelectElement>('[data-month]');
     const categorySel = root.querySelector<HTMLSelectElement>('[data-category]');
@@ -396,6 +456,8 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     const sortBtns = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-sort]'));
     const sortSelect = root.querySelector<HTMLSelectElement>('[data-sort-select]');
     const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const tabStrip = root.querySelector<HTMLElement>('[data-tabs]');
+    const shareTabBtn = root.querySelector<HTMLButtonElement>('[data-share-tab]');
     const panel = root.querySelector<HTMLElement>('#sp-results');
     const upCount = root.querySelector<HTMLElement>('[data-tab-count="upcoming"]');
     const pastCount = root.querySelector<HTMLElement>('[data-tab-count="past"]');
@@ -411,9 +473,13 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       favSet = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
     } catch (e) {}
 
-    let sortKey: 'date' | 'name' | 'followers' = 'date';
+    let sortKey: 'date' | 'name' = 'date';
     let sortDir = 1; // 1 = ascending, -1 = descending
-    let activeTab: 'upcoming' | 'past' | 'favorites' = 'upcoming';
+    // 'upcoming' | 'past' | 'favorites' | 'year:2025' — the three status tabs
+    // cover the current season, each earlier season gets a 'year:' tab.
+    const currentYear = root.dataset.currentYear ?? '';
+    const initialTab = root.dataset.initialTab ?? 'upcoming';
+    let activeTab = initialTab;
 
     // Broadcast window (local time) per row — computed live so the static build
     // stays correct and rows move from "På gång" to "Har sänts" on their own.
@@ -431,18 +497,16 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       return t >= start && t < end;
     }
 
+    /** Does this row belong to the active tab, ignoring search + filters? */
+    function inScope(row: HTMLElement) {
+      if (activeTab.startsWith('year:')) return row.dataset.year === activeTab.slice(5);
+      if (activeTab === 'favorites') return row.dataset.fav === '1';
+      // Kommande/Sänts only ever describe the current season.
+      if (row.dataset.year !== currentYear) return false;
+      return activeTab === 'past' ? isPast(row) : !isPast(row);
+    }
+
     function cmp(a: HTMLElement, b: HTMLElement) {
-      if (sortKey === 'followers') {
-        const av = a.dataset.followers ?? '';
-        const bv = b.dataset.followers ?? '';
-        const an = av === '' ? null : Number(av);
-        const bn = bv === '' ? null : Number(bv);
-        // Unknown counts always sort last, regardless of direction.
-        if (an == null && bn == null) return 0;
-        if (an == null) return 1;
-        if (bn == null) return -1;
-        return (an - bn) * sortDir;
-      }
       const av = a.dataset[sortKey] ?? '';
       const bv = b.dataset[sortKey] ?? '';
       const r = sortKey === 'name' ? av.localeCompare(bv, 'sv') : av < bv ? -1 : av > bv ? 1 : 0;
@@ -494,8 +558,12 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       for (const row of rows) {
         const done = isPast(row);
         const live = isLive(row);
-        if (done) past++;
-        else up++;
+        // Kommande/Sänts count this season only — earlier seasons have their
+        // own tabs and are past by definition.
+        if (row.dataset.year === currentYear) {
+          if (done) past++;
+          else up++;
+        }
         // In-page playback needs the podcast file, which only exists once the
         // episode has aired. While it's on air, link out to SR's live player.
         const playBtn = row.querySelector<HTMLElement>('[data-play]');
@@ -525,33 +593,63 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       if (pastCount) pastCount.textContent = '(' + past + ')';
     }
 
+    /** Category facet counts, so the dropdown reflects the tab you're on. */
+    function syncCategoryCounts(counts: Map<string, number>) {
+      if (!categorySel) return;
+      for (const opt of Array.from(categorySel.options)) {
+        if (!opt.value) continue;
+        const n = counts.get(opt.value) ?? 0;
+        opt.textContent = (opt.dataset.label ?? '') + ' (' + n + ')';
+        // Never disable the active choice — that would strand the filter.
+        opt.disabled = n === 0 && opt.value !== categorySel.value;
+      }
+    }
+
     function render() {
       const q = (search?.value ?? '').trim().toLowerCase();
       const m = monthSel?.value ?? '';
       const c = categorySel?.value ?? '';
+      // A search or a filter looks across every season — the tab only sets the
+      // default view. Favoriter is the exception: narrowing your own saved list
+      // should never pull in people you didn't save.
+      const crossYear = !!(q || m || c) && activeTab !== 'favorites';
+      // Counted over everything but the category filter itself, so the numbers
+      // read as "what picking this category would give me".
+      const catCounts = new Map<string, number>();
       let shown = 0;
+      let scopeTotal = 0;
       for (const row of [...rows].sort(cmp)) {
-        const past = isPast(row);
-        const tabOk =
-          activeTab === 'favorites' ? row.dataset.fav === '1' : activeTab === 'past' ? past : !past;
-        const visible =
-          tabOk &&
+        const scoped = crossYear || inScope(row);
+        if (scoped) scopeTotal++;
+        const rest =
+          scoped &&
           (!q || (row.dataset.search ?? '').includes(q)) &&
-          (!m || row.dataset.month === m) &&
-          (!c || row.dataset.category === c);
+          (!m || row.dataset.month === m);
+        if (rest) {
+          const k = row.dataset.category ?? '';
+          catCounts.set(k, (catCounts.get(k) ?? 0) + 1);
+        }
+        const visible = rest && (!c || row.dataset.category === c);
         row.hidden = !visible;
         if (visible) shown++;
         tbody!.appendChild(row); // re-append in sorted order
       }
+      syncCategoryCounts(catCounts);
       if (count) {
-        count.textContent = shown === rows.length ? rows.length + ' sommarpratare' : shown + ' av ' + rows.length;
+        // The denominator is the active tab's total, not the whole archive —
+        // unless a search/filter has widened the view to every season.
+        count.textContent = crossYear
+          ? shown + (shown === 1 ? ' träff' : ' träffar') + ' i alla säsonger'
+          : shown === scopeTotal
+            ? scopeTotal + ' sommarpratare'
+            : shown + ' av ' + scopeTotal;
       }
       if (clearBtn) clearBtn.hidden = !(q || m || c);
       if (noResults) {
         noResults.hidden = shown !== 0;
         if (shown === 0) {
           noResults.textContent =
-            activeTab === 'favorites'
+            activeTab === 'favorites' && scopeTotal === 0
               ? 'Inga favoriter än – tryck på hjärtat för att spara en sommarpratare.'
               : 'Inga sommarpratare matchar din sökning.';
         }
@@ -559,7 +657,19 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
       syncSortUI();
     }
 
-    function selectTab(name: 'upcoming' | 'past' | 'favorites', focus?: boolean) {
+    /** Keep the selected tab within view of the (scrollable) tab strip.
+        Measured from bounding rects rather than offsetLeft — the strip isn't a
+        positioned element, so offsetLeft is relative to something else. */
+    function revealTab(t: HTMLElement) {
+      if (!tabStrip) return;
+      const pad = 16;
+      const strip = tabStrip.getBoundingClientRect();
+      const tab = t.getBoundingClientRect();
+      if (tab.left < strip.left) tabStrip.scrollLeft -= strip.left - tab.left + pad;
+      else if (tab.right > strip.right) tabStrip.scrollLeft += tab.right - strip.right + pad;
+    }
+
+    function selectTab(name: string, focus?: boolean) {
       activeTab = name;
       for (const t of tabs) {
         const sel = t.dataset.tab === name;
@@ -568,20 +678,37 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
         if (sel) {
           if (panel) panel.setAttribute('aria-labelledby', t.id);
           if (focus) t.focus();
+          revealTab(t);
         }
       }
+      writeFilterUrl();
       render();
     }
 
-    // Keep category + month in the URL (?kategori=&manad=) — deep-linkable + combinable.
+    // Every tab + filter lives in the URL (?flik=&kategori=&manad=) so any view
+    // is deep-linkable and shareable. The default tab is left implicit so the
+    // untouched page shares as a bare "/".
+    const TAB_TO_PARAM: Record<string, string> = {
+      upcoming: 'kommande',
+      past: 'sants',
+      favorites: 'favoriter',
+    };
     function writeFilterUrl() {
       const p = new URLSearchParams();
+      if (activeTab !== initialTab) {
+        p.set('flik', activeTab.startsWith('year:') ? activeTab.slice(5) : (TAB_TO_PARAM[activeTab] ?? activeTab));
+      }
+      const q = search?.value.trim();
+      if (q) p.set('sok', q);
       if (categorySel?.value) p.set('kategori', categorySel.value);
       if (monthSel?.value) p.set('manad', monthSel.value);
       const qs = p.toString();
       history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
     }
-    search?.addEventListener('input', render);
+    search?.addEventListener('input', () => {
+      writeFilterUrl();
+      render();
+    });
     monthSel?.addEventListener('change', () => {
       writeFilterUrl();
       render();
@@ -599,31 +726,53 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     });
     sortSelect?.addEventListener('change', () => {
       const [key, dir] = sortSelect.value.split('-');
-      sortKey = key as 'date' | 'name' | 'followers';
+      sortKey = key as 'date' | 'name';
       sortDir = dir === 'desc' ? -1 : 1;
       render();
     });
     for (const btn of sortBtns) {
       btn.addEventListener('click', () => {
-        const key = btn.dataset.sort as 'date' | 'name' | 'followers';
+        const key = btn.dataset.sort as 'date' | 'name';
         if (sortKey === key) sortDir *= -1;
         else {
           sortKey = key;
-          // followers feels most useful highest-first by default.
-          sortDir = key === 'followers' ? -1 : 1;
+          sortDir = 1;
         }
         render();
       });
     }
     tabs.forEach((t, i) => {
-      t.addEventListener('click', () => selectTab(t.dataset.tab as 'upcoming' | 'past' | 'favorites'));
+      t.addEventListener('click', () => selectTab(t.dataset.tab ?? 'upcoming'));
       t.addEventListener('keydown', (e) => {
         if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
         e.preventDefault();
         const dir = e.key === 'ArrowRight' ? 1 : -1;
         const next = tabs[(i + dir + tabs.length) % tabs.length];
-        selectTab(next.dataset.tab as 'upcoming' | 'past' | 'favorites', true);
+        selectTab(next.dataset.tab ?? 'upcoming', true);
       });
+    });
+
+    // Share the current view. The URL already carries the tab + filters, so
+    // this is just "share where I am" — named after the tab so the recipient
+    // knows what they're opening.
+    shareTabBtn?.addEventListener('click', async () => {
+      const label = (tabs.find((t) => t.dataset.tab === activeTab)?.textContent ?? '')
+        .replace(/\(\d+\)/, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const title = label ? 'Sommarpratet – ' + label : 'Sommarpratet';
+      const url = location.href;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title, text: title, url });
+        } else if (navigator.clipboard) {
+          await navigator.clipboard.writeText(url);
+          shareTabBtn.dataset.tip = 'Länk kopierad';
+          window.setTimeout(() => {
+            shareTabBtn.dataset.tip = 'Dela vyn';
+          }, 1500);
+        }
+      } catch (e) {}
     });
 
     // Share — Web Share API, with a copy-link fallback where it's unsupported.
@@ -680,8 +829,11 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     }
     syncViewButtons();
 
-    // Deep link: restore category + month from the URL (?kategori=, ?manad=) on load.
+    // Deep link: restore season + category + month from the URL on load
+    // (?ar=, ?kategori=, ?manad=).
     const params = new URLSearchParams(location.search);
+    const qParam = params.get('sok');
+    if (qParam && search) search.value = qParam;
     const catParam = params.get('kategori');
     if (catParam && categorySel && [...categorySel.options].some((o) => o.value === catParam)) {
       categorySel.value = catParam;
@@ -690,10 +842,28 @@ const initialCount = upcomingCount === rows.length ? rows.length + ' sommarprata
     if (monthParam && monthSel && [...monthSel.options].some((o) => o.value === monthParam)) {
       monthSel.value = monthParam;
     }
+    // ?flik=kommande|sants|favoriter|2025 — ?ar=2025 is kept as an alias.
+    const PARAM_TO_TAB: Record<string, string> = {
+      kommande: 'upcoming',
+      sants: 'past',
+      favoriter: 'favorites',
+    };
+    const flik = params.get('flik') ?? params.get('ar');
+    const wantedTab = flik ? (PARAM_TO_TAB[flik] ?? (/^\d{4}$/.test(flik) ? 'year:' + flik : '')) : '';
 
     applyFavs();
     updateStatus();
-    render();
+    if (wantedTab && tabs.some((t) => t.dataset.tab === wantedTab)) selectTab(wantedTab);
+    else render();
+
+    // The webfont lands after the first layout pass and changes tab widths, so
+    // the initial reveal has to be redone once things have settled.
+    const revealActive = () => {
+      const t = tabs.find((x) => x.dataset.tab === activeTab);
+      if (t) revealTab(t);
+    };
+    requestAnimationFrame(revealActive);
+    document.fonts?.ready.then(revealActive).catch(() => {});
     // Re-evaluate live state + tab membership over time (e.g. 13:00 → live).
     setInterval(() => {
       updateStatus();

@@ -11,7 +11,7 @@
 //   node add-sommarpratare.mjs --file hosts.json --update
 //   node add-sommarpratare.mjs --file hosts.json --content-dir /path/to/sommarpratare
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, rmSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,15 +34,22 @@ const FILE = opt('--file');
 
 // ---- helpers --------------------------------------------------------------
 function slugify(s) {
-  return String(s)
-    .toLowerCase()
-    .replace(/[åä]/g, 'a')
-    .replace(/ö/g, 'o')
-    .replace(/é|è|ê/g, 'e')
-    .replace(/ü/g, 'u')
-    .replace(/ø/g, 'o')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+  return (
+    String(s)
+      .toLowerCase()
+      // Swedish/Nordic letters transliterate rather than decompose.
+      .replace(/[åä]/g, 'a')
+      .replace(/ö/g, 'o')
+      .replace(/ø/g, 'o')
+      .replace(/æ/g, 'ae')
+      .replace(/ß/g, 'ss')
+      // Strip every other diacritic (é, ü, ć, š, ž…) via Unicode decomposition,
+      // so e.g. "Zećira Mušović" slugs to zecira-musovic and not ze-ira-mu-ovi.
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  );
 }
 
 function normalizeDate(input) {
@@ -65,8 +72,6 @@ function frontmatter(host) {
   if (host.time) lines.push(`time: ${yamlStr(host.time)}`);
   if (host.description) lines.push(`description: ${yamlStr(host.description)}`);
   if (host.instagram) lines.push(`instagram: ${yamlStr(host.instagram)}`);
-  if (host.instagramFollowers != null && host.instagramFollowers !== '')
-    lines.push(`instagramFollowers: ${Number(host.instagramFollowers)}`);
   if (host.x) lines.push(`x: ${yamlStr(host.x)}`);
   if (host.wikipedia) lines.push(`wikipedia: ${yamlStr(host.wikipedia)}`);
   if (host.sr) lines.push(`sr: ${yamlStr(host.sr)}`);
@@ -77,18 +82,26 @@ function frontmatter(host) {
 }
 
 // Read existing files' name+date so we can dedup even if filenames differ.
+// Recurses, because entries are filed under a per-season folder (…/2026/).
 function existingKeys(dir) {
-  const keys = new Map(); // key -> filename
-  if (!existsSync(dir)) return keys;
-  for (const f of readdirSync(dir)) {
-    if (!f.endsWith('.md')) continue;
-    const raw = readFileSync(join(dir, f), 'utf8');
-    const fm = raw.match(/^---\n([\s\S]*?)\n---/);
-    if (!fm) continue;
-    const nameM = fm[1].match(/^name:\s*"?(.+?)"?\s*$/m);
-    const dateM = fm[1].match(/^date:\s*"?(\d{4}-\d{2}-\d{2})"?\s*$/m);
-    if (nameM && dateM) keys.set(`${nameM[1].toLowerCase()}|${dateM[1]}`, f);
-  }
+  const keys = new Map(); // key -> path relative to the content dir
+  const walk = (d, prefix) => {
+    if (!existsSync(d)) return;
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      if (e.isDirectory()) {
+        walk(join(d, e.name), `${prefix}${e.name}/`);
+        continue;
+      }
+      if (!e.name.endsWith('.md')) continue;
+      const raw = readFileSync(join(d, e.name), 'utf8');
+      const fm = raw.match(/^---\n([\s\S]*?)\n---/);
+      if (!fm) continue;
+      const nameM = fm[1].match(/^name:\s*"?(.+?)"?\s*$/m);
+      const dateM = fm[1].match(/^date:\s*"?(\d{4}-\d{2}-\d{2})"?\s*$/m);
+      if (nameM && dateM) keys.set(`${nameM[1].toLowerCase()}|${dateM[1]}`, `${prefix}${e.name}`);
+    }
+  };
+  walk(dir, '');
   return keys;
 }
 
@@ -122,8 +135,6 @@ if (!Array.isArray(hosts)) {
 }
 
 // ---- write ----------------------------------------------------------------
-if (!DRY_RUN && !existsSync(CONTENT_DIR)) mkdirSync(CONTENT_DIR, { recursive: true });
-
 const seen = existingKeys(CONTENT_DIR);
 const summary = { created: [], updated: [], skipped: [], errors: [] };
 
@@ -144,19 +155,31 @@ for (const h of hosts) {
 
   const host = { ...h, date };
   const key = `${host.name.toLowerCase()}|${date}`;
-  const fileName = `${date}-${slugify(host.name)}.md`;
-  const filePath = join(CONTENT_DIR, fileName);
+  // One folder per season. It's organisational only — the collection's
+  // generateId strips it, so entry ids stay the bare filename slug.
+  const year = date.slice(0, 4);
+  const relPath = `${year}/${date}-${slugify(host.name)}.md`;
+  const filePath = join(CONTENT_DIR, relPath);
   const existsForKey = seen.has(key) || existsSync(filePath);
 
   if (existsForKey && !UPDATE) {
-    summary.skipped.push(fileName);
+    summary.skipped.push(relPath);
     continue;
   }
 
   const content = frontmatter(host);
-  if (!DRY_RUN) writeFileSync(filePath, content, 'utf8');
-  (existsForKey ? summary.updated : summary.created).push(fileName);
-  seen.set(key, fileName);
+  if (!DRY_RUN) {
+    mkdirSync(join(CONTENT_DIR, year), { recursive: true });
+    // --update on an entry filed elsewhere (e.g. a pre-folder layout) would
+    // otherwise leave the old copy behind as a duplicate.
+    const prev = seen.get(key);
+    if (prev && prev !== relPath && existsSync(join(CONTENT_DIR, prev))) {
+      rmSync(join(CONTENT_DIR, prev));
+    }
+    writeFileSync(filePath, content, 'utf8');
+  }
+  (existsForKey ? summary.updated : summary.created).push(relPath);
+  seen.set(key, relPath);
 }
 
 // ---- report ---------------------------------------------------------------

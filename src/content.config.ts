@@ -3,8 +3,15 @@ import { glob } from 'astro/loaders';
 
 const sommarpratare = defineCollection({
   // Astro Content Layer API: one Markdown file per summer host, loaded from
-  // src/content/sommarpratare. Frontmatter-only — there is no rendered body.
-  loader: glob({ pattern: '**/*.md', base: './src/content/sommarpratare' }),
+  // src/content/sommarpratare/<year>/. Frontmatter-only — there is no rendered
+  // body. The year folder is organisational only: ids stay the bare filename
+  // slug (2026-06-20-helena-bergstrom), which is what favourites in
+  // localStorage and the calendar UIDs are keyed on.
+  loader: glob({
+    pattern: '**/*.md',
+    base: './src/content/sommarpratare',
+    generateId: ({ entry }) => entry.replace(/^.*\//, '').replace(/\.md$/, ''),
+  }),
   schema: z.object({
     /** Full name, as broadcast. */
     name: z.string(),
@@ -17,8 +24,6 @@ const sommarpratare = defineCollection({
     /** Optional explicit profile/article links. When omitted the UI falls back
         to a search link built from the name (see src/lib/links.ts). */
     instagram: z.string().url().optional(),
-    /** Approximate Instagram follower count (volatile — a mid-2026 snapshot). */
-    instagramFollowers: z.number().optional(),
     x: z.string().url().optional(),
     wikipedia: z.string().url().optional(),
     /** Sveriges Radio episode page for this host's Sommar i P1. */

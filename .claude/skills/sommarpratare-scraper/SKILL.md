@@ -29,31 +29,57 @@ This is the helper script's default `--content-dir`. Override with
 
 ## Sources
 
-| # | Source | URL | Notes |
-|---|--------|-----|-------|
-| 1 | Sveriges Radio (official) | https://www.sverigesradio.se/artikel/sommarpratare-<year>-hela-listan | Canonical list + dates. Often returns **HTTP 403** to plain fetches — fall back to WebSearch + the mirrors below. |
-| 2 | Expressen | https://www.expressen.se/noje/arets-sommarpratare-<year>--hela-listan-/ | The list the site was first built from. **Blocked for WebFetch** — use as a human-verifiable reference only. |
-| 3 | Nyheter24 | https://nyheter24.se/noje/kultur/...arets-sommarpratare-<year>-lista-med-datum... | Usually fetchable; carries the full dated list. Good primary fetch target. |
-| 4 | SVT / GP | svt.se, gp.se | Announcement coverage; useful to cross-check names and roles. |
+**Use Sveriges Radio's open API first.** It is canonical, CORS-open, needs no
+key, and returns names, dates, roles, episode ids *and* portrait URLs in one
+call — far better than scraping any article. `sverigesradio.se` article pages
+**403 every fetch** (WebFetch and curl alike); the news mirrors are fallbacks.
 
-Sommar i P1 runs daily from midsummer (≈ 20 June) to mid-August (≈ 16 August),
-so a full season is ~58 hosts, one per day.
+```bash
+# programid 2071 = "Sommar & Vinter i P1"
+curl -s "https://api.sr.se/api/v2/episodes/index?programid=2071\
+&fromdate=<year>-06-01&todate=<year>-08-31&format=json&pagination=false"
+```
+
+Each episode gives:
+
+| Field | Use |
+|-------|-----|
+| `title` | the host's name — **normalise NBSPs** (`Petra\xa0Malm`) to plain spaces |
+| `description` | `"Komikern om romantik…"` → derive the short role (see below) |
+| `publishdateutc` | `/Date(ms)/` → the broadcast date |
+| `id` | → `sr: https://sverigesradio.se/play/avsnitt/<id>` (drives the player) |
+| `imageurltemplate` | + `?preset=api-default-square` → a 512×512 press portrait |
+
+Filter out the non-host episodes: `Sommarvärdarna <year> presenteras` and any
+`Fråga Värden – …` follow-ups. A full season is 58 hosts, one per day from
+midsummer (≈ 20 June) to mid-August (≈ 17 August).
+
+| Fallback | URL | Notes |
+|----------|-----|-------|
+| Nyheter24 | https://nyheter24.se/noje/kultur/…sommarpratare-<year>-lista-med-datum… | Usually fetchable; full dated list. |
+| Expressen | https://www.expressen.se/noje/arets-sommarpratare-<year>--hela-listan-/ | **Blocked for WebFetch** — human reference only. |
+| SVT / GP | svt.se, gp.se | Cross-check names and roles. |
 
 ## Workflow
 
 ### 1. Fetch the list
 
-Use **WebFetch** against a fetchable mirror (Nyheter24 is reliable; Sveriges
-Radio and Expressen frequently 403/block). Prompt for *every* entry:
+Pull the API range above. If it's unavailable, WebFetch a mirror and prompt for
+*every* entry:
 
 > "Extract the complete list of Sommar i P1 <year> sommarpratare. For each
 > person return the broadcast date, full name, and a short description of who
 > they are (profession/role). Return ALL entries — there should be ~58."
 
-If the primary source blocks or returns a partial list, use **WebSearch** for
-`sommarpratare <year> hela listan datum` and reconcile across sources. **Never
-invent names, dates, or descriptions** — if a host's role is unknown, leave the
-description empty rather than guessing.
+**Never invent names, dates, or descriptions** — if a host's role is unknown,
+leave the description empty rather than guessing.
+
+Deriving the role from an SR description: take the leading noun phrase up to
+` om `/` som `/` berättar ` and convert definite → indefinite (`Komikern` →
+`Komiker`, `Skådespelaren` → `Skådespelare`, `Riksbankschefen` →
+`Riksbankschef`). **Review every one by hand** — the transform mangles compounds
+(`Förintelseöverlevanden`, `KAJ-medlemmen`) and some descriptions carry no role
+at all.
 
 ### 2. Build the JSON array
 
@@ -119,7 +145,6 @@ Files validate against `src/content.config.ts`:
 | time | string (HH:MM) | optional |
 | description | string | optional |
 | instagram | url | optional |
-| instagramFollowers | number | optional |
 | x | url | optional |
 | wikipedia | url | optional |
 | sr | url | optional |
@@ -130,9 +155,25 @@ Files validate against `src/content.config.ts`:
 
 ## Filename convention
 
-`{date}-{name-slug}.md` — generated automatically (lowercase, Swedish characters
-transliterated: å/ä→a, ö→o, é→e). Example: `2026-06-20-helena-bergstrom.md`.
-Date-first so files sort chronologically on disk.
+`<year>/{date}-{name-slug}.md` — generated automatically. One folder per season;
+the slug is lowercase with Swedish characters transliterated (å/ä→a, ö→o) and
+every other diacritic stripped (é→e, ć→c, š→s). Example:
+`2026/2026-06-20-helena-bergstrom.md`.
+
+The season folder is **organisational only** — `src/content.config.ts` sets
+`generateId` to strip it, so entry ids stay the bare filename slug. Favourites in
+localStorage and calendar UIDs are keyed on those ids, so don't change this.
+
+## Portraits
+
+Optional but expected: download `imageurltemplate + '?preset=api-default-square'`
+to `public/avatars/<same-slug>.webp` and set `image: "/avatars/<slug>.webp"`.
+
+```bash
+magick in.jpg -resize 512x512^ -gravity center -extent 512x512 -quality 82 out.webp
+```
+
+Hosts without a portrait fall back to an initials avatar (`src/lib/avatar.ts`).
 
 ## Recommended cadence
 

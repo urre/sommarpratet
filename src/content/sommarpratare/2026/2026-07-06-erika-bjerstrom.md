@@ -1,0 +1,9 @@
+---
+name: "Erika Bjerström"
+date: 2026-07-06
+time: "13:00"
+description: "Journalist"
+instagram: "https://www.instagram.com/erika.bjerstrom/"
+image: "/avatars/erika-bjerstrom.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815478"
+---

@@ -1,0 +1,9 @@
+---
+name: "Kajsa Ollongren"
+date: 2026-07-23
+time: "13:00"
+description: "EU:s särskilda representant för mänskliga rättigheter"
+instagram: "https://www.instagram.com/kajsaollongren/"
+image: "/avatars/kajsa-ollongren.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815525"
+---

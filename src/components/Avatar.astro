@@ -17,9 +17,19 @@ const fg = textColor(bg);
 ---
 
 {image ? (
-  <span class={styles.holder}>
+  <span class={styles.holder} style={`--av-fs:${Math.round(size * 0.36)}px`}>
+    {/* Initials sit *under* every photo: visible while the lazy image is still
+        loading (a tab switch reveals ~58 rows at once) and left in place if it
+        never arrives at all. */}
+    <span
+      class={styles.fallback}
+      data-avatar-fallback
+      style={`background:${bg};color:${fg}`}
+      aria-hidden="true"
+    >{initials(name)}</span>
     <img
       class={styles.avatar}
+      data-avatar-img
       src={image}
       alt={name}
       width={size}
@@ -29,7 +39,7 @@ const fg = textColor(bg);
       decoding="async"
     />
     {preview && (
-      <img class={styles.preview} src={image} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+      <img class={styles.preview} data-avatar-img src={image} alt="" aria-hidden="true" loading="lazy" decoding="async" />
     )}
   </span>
 ) : (
@@ -39,3 +49,21 @@ const fg = textColor(bg);
     aria-hidden="true"
   >{initials(name)}</span>
 )}
+
+<script>
+  // Fade out any portrait that fails to load, leaving the initials layer
+  // underneath visible. Bound up-front (not polled) because avatars are lazy
+  // and only start loading when a tab switch or a scroll reveals their row.
+  function bindAvatarFallbacks() {
+    for (const img of Array.from(document.querySelectorAll<HTMLImageElement>('img[data-avatar-img]'))) {
+      if (img.dataset.bound) continue;
+      img.dataset.bound = '1';
+      // An error may already have fired before this script ran.
+      if (img.complete && img.naturalWidth === 0) img.dataset.failed = '1';
+      else img.addEventListener('error', () => (img.dataset.failed = '1'), { once: true });
+    }
+  }
+
+  if (document.readyState !== 'loading') bindAvatarFallbacks();
+  else document.addEventListener('DOMContentLoaded', bindAvatarFallbacks);
+</script>

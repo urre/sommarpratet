@@ -1,0 +1,9 @@
+---
+name: "Sebastian Siemiatkowski"
+date: 2026-07-08
+time: "13:00"
+description: "Klarnas grundare och vd"
+instagram: "https://www.instagram.com/sebastiansiemiatkowski/"
+image: "/avatars/sebastian-siemiatkowski.webp"
+sr: "https://sverigesradio.se/play/avsnitt/2815483"
+---

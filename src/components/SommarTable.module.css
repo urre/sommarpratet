@@ -4,27 +4,82 @@
   gap: var(--space-5);
 }
 
-/* ---- tabs (På gång / Har sänts) ----------------------------------------- */
+/* ---- tabs (Kommande / Sänts / Favoriter · earlier seasons) --------------- */
+.tabsRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
 .tabs {
   display: flex;
   gap: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
+  /* Six tabs don't fit a phone. `min-width: 0` is what actually lets this flex
+     child shrink below its content width so overflow-x has something to do. */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  /* No scroll-snap here — proximity snapping fights the programmatic
+     "reveal the selected tab" scroll and springs the strip back to 0. */
+  /* The selected tab's 2px underline overlaps the row's 1px border. Applied to
+     the scroll container, not the tabs — `overflow-x` would clip it there. */
+  margin-bottom: -1px;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 .tab {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  flex: none;
+  white-space: nowrap;
   font: inherit;
   font-weight: 600;
   color: var(--color-muted);
   background: none;
   border: 0;
   border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
   padding: 0 var(--space-1) var(--space-3);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+/* Splits "this season" from the archive tabs. */
+.tabsDivider {
+  flex: none;
+  width: 1px;
+  background: var(--color-border);
+  margin: 0.15rem 0 calc(var(--space-3) + 0.15rem);
+}
+.tabYear {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shares the current view (tab + filters live in the URL). Outside the
+   tablist — a non-tab child of role="tablist" confuses screen readers. */
+.shareTab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  margin-bottom: var(--space-2);
+  color: var(--color-muted);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.shareTab:hover {
+  color: var(--color-ink);
+  border-color: var(--color-border);
+}
+
 .tab:hover {
   color: var(--color-ink);
 }
@@ -36,6 +91,22 @@
   color: var(--color-muted);
   font-weight: 500;
   font-size: 0.85rem;
+}
+
+/* The season, inline next to the date. Only used in card view — the table has a
+   dedicated År column instead (see .thYear/.cellYear). */
+.yearLabel {
+  display: none;
+}
+html[data-cards] .yearLabel {
+  display: inline;
+  margin-left: 0.4em;
+  padding: 0.05em 0.45em;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-grey);
+  color: var(--color-ink-soft);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---- toolbar: search (+ count beneath) on the left, filters on the right --- */
@@ -237,7 +308,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 880px;
+  min-width: 760px;
 }
 
 .table thead th {
@@ -256,9 +327,9 @@
 .thFav { width: 44px; text-align: center; }
 .thAvatar { width: 64px; }
 .thDate { width: 116px; }
+.thYear { width: 56px; }
 .thStatus { width: 72px; text-align: center; }
 .thName { width: 180px; }
-.thFollowers { width: 168px; text-align: right; }
 .thLinks { width: 1%; white-space: nowrap; }
 
 .sortBtn {
@@ -348,6 +419,15 @@
   font-size: 0.78rem;
 }
 
+.cellYear {
+  color: var(--color-muted);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* ---- status pill (Idag / Live) ------------------------------------------ */
 .cellStatus {
   text-align: center;
@@ -386,17 +466,6 @@
   min-width: 200px;
 }
 
-/* ---- followers ---------------------------------------------------------- */
-.cellFollowers {
-  text-align: right;
-  color: var(--color-ink-soft);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  font-size: 0.9rem;
-}
-.follNone {
-  color: var(--color-muted);
-}
 
 /* ---- action icons ------------------------------------------------------- */
 .cellLinks { white-space: nowrap; }
@@ -544,7 +613,7 @@ html[data-cards] .row {
   grid-template-areas:
     'avatar avatar'
     'name   name'
-    'date   foll'
+    'date   date'
     'desc   desc'
     'links  links';
   gap: var(--space-2) var(--space-3);
@@ -584,12 +653,25 @@ html[data-cards] .cellAvatar > span {
   display: block;
   width: 100%;
 }
+/* `img:first-of-type` = the portrait, not the hover-preview copy that follows
+   it (both carry data-avatar-img, so an attribute selector would size both and
+   double the holder's height). */
 html[data-cards] .cellAvatar img:first-of-type {
+  /* Block, not inline-flex: as an inline box it sits on a line and the
+     descender gap below it exposes a sliver of the initials layer behind. */
+  display: block;
   width: 100% !important;
   height: 180px !important;
   object-fit: cover;
   object-position: center 28%;
   border-radius: 0 !important;
+  box-shadow: none;
+}
+/* The initials layer fills the same banner. `--av-fs` is set on the element
+   itself so it beats the inherited value from the avatar holder. */
+html[data-cards] .cellAvatar [data-avatar-fallback] {
+  --av-fs: 3rem;
+  border-radius: 0;
   box-shadow: none;
 }
 
@@ -631,10 +713,11 @@ html[data-cards] .cellDate {
   grid-area: date;
   font-size: 0.85rem;
 }
-html[data-cards] .cellFollowers {
-  grid-area: foll;
-  justify-self: end;
-  align-self: center;
+/* Cards get the year as a pill next to the date (.yearLabel) rather than its
+   own cell — an unplaced cell would auto-place and break grid-template-areas.
+   `td.cellYear` to out-specify the blanket `html[data-cards] .table td` rule. */
+html[data-cards] .table td.cellYear {
+  display: none;
 }
 html[data-cards] .cellDesc {
   grid-area: desc;

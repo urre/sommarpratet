@@ -32,14 +32,3 @@ export function isoDate(d: Date): string {
 export function monthName(month: number): string {
   return MONTHS_LONG[month - 1] ?? '';
 }
-
-/** Compact follower count, Swedish style: 1200000 → "1,2 mn", 45000 → "45 k". */
-export function formatFollowers(n?: number | null): string {
-  if (n == null) return '';
-  if (n >= 1_000_000) {
-    const m = Math.round((n / 1_000_000) * 10) / 10;
-    return String(m).replace('.', ',') + ' mn';
-  }
-  if (n >= 1_000) return Math.round(n / 1000) + ' k';
-  return String(n);
-}

@@ -6,18 +6,22 @@ import { getHosts, isoDate } from '../lib/sommarpratare';
 import styles from './index.module.css';
 
 const hosts = await getHosts();
-const first = hosts[0]?.data.date;
-const year = first?.getUTCFullYear() ?? new Date().getUTCFullYear();
+// The table also carries earlier seasons (behind their own tabs), so "årets"
+// is the newest season present, not the first row.
+const year = hosts.reduce((y, h) => Math.max(y, h.data.date.getUTCFullYear()), 0) || new Date().getUTCFullYear();
+const currentHosts = hosts.filter((h) => h.data.date.getUTCFullYear() === year);
 const site = Astro.site ?? Astro.url;
 
-// ItemList structured data for the full line-up. Each Person carries their
-// portrait, verified profiles (sameAs) and the Sommar i P1 episode (subjectOf).
+// ItemList structured data for this year's line-up (the page's subject —
+// earlier seasons are an archive and are left out to keep the payload small).
+// Each Person carries their portrait, verified profiles (sameAs) and the
+// Sommar i P1 episode (subjectOf).
 const itemListSchema = {
   '@context': 'https://schema.org',
   '@type': 'ItemList',
   name: `Sommarpratare i Sommar i P1 ${year}`,
-  numberOfItems: hosts.length,
-  itemListElement: hosts.map((h, i) => {
+  numberOfItems: currentHosts.length,
+  itemListElement: currentHosts.map((h, i) => {
     const sameAs = [h.data.instagram, h.data.x, h.data.wikipedia].filter(Boolean);
     const person: Record<string, unknown> = { '@type': 'Person', name: h.data.name };
     if (h.data.description) person.description = h.data.description;
@@ -41,8 +45,8 @@ const itemListSchema = {
   <header class={styles.hero}>
     <h1 class={styles.title}><a href="/" class={styles.titleLink}>Sommarpratet</a></h1>
     <p class={styles.lede}>
-      En lite bättre översikt över årets sommarpratare. Spara dina favoriter och lägg
-      till sändningarna direkt i din kalender.
+      En lite bättre översikt över årets sommarpratare – och arkivet från tidigare
+      somrar. Spara dina favoriter och lägg till sändningarna direkt i din kalender.
     </p>
   </header>
 
